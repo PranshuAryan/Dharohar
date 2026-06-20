@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-Frame-Options" content="DENY"/>
+  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+  <title>Dharohar — My Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --forest:      #2D6A4F;
+      --forest-mid:  #40916C;
+      --leaf:        #74C69D;
+      --leaf-light:  #D8F3DC;
+      --sky:         #E8F4FD;
+      --earth:       #1B3A2D;
+      --cream:       #F7FBFF;
+      --text:        #1a2e22;
+      --muted:       #5a7a6a;
+      --border:      #e0ece6;
+      --white:       #ffffff;
+      --danger:      #c0392b;
+      --danger-bg:   #fff0f0;
+      --warn:        #e67e22;
+      --warn-bg:     #fff8f0;
+      --gold:        #f39c12;
+      --gold-bg:     #fffbf0;
+    }
+
+    html, body { min-height: 100%; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--text); }
+
+    /* ── NAV ── */
+    nav {
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; }
+    .logo-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--forest); }
+    .logo-sub  { font-size: 0.6rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user  { font-size: 0.82rem; color: var(--muted); }
+    .nav-streak { background: var(--leaf-light); color: var(--forest); border-radius: 100px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; }
+    .nav-menu { position: relative; }
+    .nav-menu-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.75); backdrop-filter: blur(10px);
+      border: 1px solid rgba(45,106,79,0.18); border-radius: 100px;
+      padding: 7px 14px; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600; color: var(--forest); cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-menu-btn:hover { background: white; }
+    .nav-menu-btn .chevron { width: 14px; height: 14px; transition: transform 0.2s; }
+    .nav-menu-btn.open .chevron { transform: rotate(180deg); }
+    .dropdown {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+      border: 1px solid rgba(45,106,79,0.12); border-radius: 16px;
+      padding: 8px; min-width: 200px;
+      box-shadow: 0 12px 40px rgba(27,58,45,0.14); z-index: 200;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+      text-decoration: none; font-size: 0.85rem; font-weight: 500; color: var(--text); transition: background 0.15s;
+    }
+    .dropdown a:hover, .dropdown a.active { background: var(--leaf-light); color: var(--forest); }
+    .btn-signout {
+      width: 100%; margin-top: 6px; padding: 9px; background: transparent;
+      border: 1px solid #ffd0d0; border-radius: 10px; color: var(--danger);
+      font-size: 0.82rem; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-signout:hover { background: var(--danger-bg); }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    /* ── LOADING ── */
+    .loading-screen {
+      position: fixed; inset: 0; background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px; z-index: 500;
+    }
+    .loading-screen.hidden { display: none; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--forest); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── HERO ── */
+    .report-hero {
+      background: linear-gradient(135deg, var(--earth) 0%, var(--forest) 60%, var(--forest-mid) 100%);
+      border-radius: 24px; padding: 36px 36px 32px; margin-bottom: 28px;
+      color: white; position: relative; overflow: hidden;
+    }
+    .report-hero::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(116,198,157,0.12); pointer-events: none;
+    }
+    .report-hero::after {
+      content: ''; position: absolute; bottom: -30px; left: 30%;
+      width: 140px; height: 140px; border-radius: 50%;
+      background: rgba(116,198,157,0.07); pointer-events: none;
+    }
+    .hero-eyebrow { font-size: 0.72rem; letter-spacing: 3px; text-transform: uppercase; color: var(--leaf); margin-bottom: 10px; }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
+    .hero-title em { font-style: italic; color: var(--leaf); }
+    .hero-sub { font-size: 0.88rem; color: rgba(255,255,255,0.7); margin-bottom: 24px; }
+    .hero-stats { display: flex; gap: 24px; flex-wrap: wrap; }
+    .hero-stat { background: rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    .hero-stat-num { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: white; }
+    .hero-stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+    /* ── TABS ── */
+    .tabs-wrap { display: flex; gap: 6px; background: white; border: 1px solid var(--border); border-radius: 16px; padding: 6px; margin-bottom: 24px; }
+    .tab-btn {
+      flex: 1; padding: 10px 16px; border: none; border-radius: 12px; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
+      color: var(--muted); background: transparent; transition: all 0.2s;
+    }
+    .tab-btn.active { background: var(--forest); color: white; box-shadow: 0 2px 8px rgba(45,106,79,0.3); }
+    .tab-btn:hover:not(.active) { background: var(--leaf-light); color: var(--forest); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── SECTION CARD ── */
+    .card {
+      background: white; border: 1px solid var(--border);
+      border-radius: 20px; padding: 26px; margin-bottom: 18px;
+    }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .card-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--leaf-light); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .card-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--earth); }
+    .card-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── INSIGHT BANNER ── */
+    .insight {
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 18px;
+      display: flex; gap: 14px; align-items: flex-start;
+      font-size: 0.88rem; line-height: 1.6;
+    }
+    .insight.good  { background: var(--leaf-light); border: 1px solid var(--leaf); color: var(--forest); }
+    .insight.warn  { background: var(--warn-bg); border: 1px solid #f5cba7; color: #7d4a0a; }
+    .insight.bad   { background: var(--danger-bg); border: 1px solid #f5b7b1; color: var(--danger); }
+    .insight.info  { background: var(--sky); border: 1px solid #bee3f8; color: #1a4c6e; }
+    .insight.gold  { background: var(--gold-bg); border: 1px solid #f9e4a0; color: #7a5800; }
+    .insight-icon  { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; }
+    .insight strong { font-weight: 600; display: block; margin-bottom: 3px; }
+
+    /* ── STAT GRID ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-box { background: var(--cream); border-radius: 14px; padding: 16px 14px; text-align: center; }
+    .stat-box.highlight { background: var(--leaf-light); border: 1px solid var(--leaf); }
+    .stat-box.red-box { background: var(--danger-bg); border: 1px solid #f5b7b1; }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--earth); }
+    .stat-unit { font-size: 0.68rem; color: var(--muted); }
+    .stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+
+    /* ── BREAKDOWN BAR ── */
+    .breakdown { margin: 20px 0; }
+    .breakdown-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+    .breakdown-track { height: 12px; background: var(--border); border-radius: 10px; overflow: hidden; }
+    .breakdown-fill { height: 100%; border-radius: 10px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+    .breakdown-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+    .legend-dot { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--muted); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── CHART CONTAINER ── */
+    .chart-wrap { position: relative; height: 240px; margin: 16px 0; }
+    .chart-wrap.tall { height: 300px; }
+
+    /* ── DAY ROW (weekly breakdown) ── */
+    .day-rows { display: flex; flex-direction: column; gap: 8px; }
+    .day-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--cream); border-radius: 12px; }
+    .day-row.today { background: var(--leaf-light); border: 1px solid var(--leaf); }
+    .day-name { font-weight: 600; font-size: 0.82rem; width: 36px; flex-shrink: 0; }
+    .day-date { font-size: 0.72rem; color: var(--muted); width: 52px; flex-shrink: 0; }
+    .day-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; }
+    .day-bar { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+    .day-kg { font-size: 0.82rem; font-weight: 600; color: var(--earth); width: 52px; text-align: right; flex-shrink: 0; }
+    .day-badge { font-size: 0.68rem; padding: 2px 8px; border-radius: 100px; flex-shrink: 0; }
+    .badge-good { background: var(--leaf-light); color: var(--forest); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn); }
+    .badge-bad  { background: var(--danger-bg); color: var(--danger); }
+    .badge-na   { background: #f0f0f0; color: #999; }
+
+    /* ── MONTH CALENDAR ── */
+    .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0; }
+    .month-day-label { text-align: center; font-size: 0.65rem; font-weight: 600; color: var(--muted); padding: 4px 0; text-transform: uppercase; }
+    .month-cell {
+      aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 0.72rem; font-weight: 500;
+      background: var(--border); color: var(--muted); position: relative; cursor: default;
+      transition: transform 0.15s;
+    }
+    .month-cell:hover { transform: scale(1.1); z-index: 2; }
+    .month-cell.empty { background: transparent; }
+    .month-cell.logged-good { background: var(--leaf); color: white; }
+    .month-cell.logged-mid  { background: var(--warn); color: white; }
+    .month-cell.logged-bad  { background: var(--danger); color: white; }
+    .month-cell.today-cell  { box-shadow: 0 0 0 2px var(--earth); }
+    .month-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 0.72rem; color: var(--muted); }
+    .month-legend-item { display: flex; align-items: center; gap: 5px; }
+    .month-legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* ── NATURE IMPACT ── */
+    .nature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 540px) { .nature-grid { grid-template-columns: 1fr; } }
+    .nature-card { background: var(--cream); border-radius: 16px; padding: 18px; text-align: center; }
+    .nature-card.positive { background: var(--leaf-light); }
+    .nature-card.negative { background: var(--danger-bg); }
+    .nature-emoji { font-size: 2rem; margin-bottom: 8px; }
+    .nature-num { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--earth); }
+    .nature-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+    /* ── CTA CARDS ── */
+    .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+    @media (max-width: 540px) { .cta-grid { grid-template-columns: 1fr; } }
+    .cta-card {
+      border-radius: 18px; padding: 22px; text-decoration: none;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid transparent;
+    }
+    .cta-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(27,58,45,0.13); }
+    .cta-card.green { background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%); color: white; }
+    .cta-card.earth { background: linear-gradient(135deg, var(--earth) 0%, #2d5040 100%); color: white; }
+    .cta-icon { font-size: 1.8rem; }
+    .cta-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
+    .cta-desc { font-size: 0.78rem; opacity: 0.8; line-height: 1.5; }
+    .cta-arrow { font-size: 0.82rem; opacity: 0.7; margin-top: 4px; }
+
+    /* ── TREND BADGE ── */
+    .trend { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 600; }
+    .trend.up   { background: var(--danger-bg); color: var(--danger); }
+    .trend.down { background: var(--leaf-light); color: var(--forest); }
+    .trend.flat { background: #f0f0f0; color: #888; }
+
+    /* ── PERFORMANCE RING ── */
+    .perf-ring-wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .perf-ring { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+    .perf-ring svg { transform: rotate(-90deg); }
+    .perf-ring-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .perf-ring-pct { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--earth); }
+    .perf-ring-label { font-size: 0.6rem; color: var(--muted); }
+    .perf-text { flex: 1; min-width: 200px; }
+    .perf-text h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--earth); margin-bottom: 6px; }
+    .perf-text p { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty-state .e-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.88rem; line-height: 1.6; }
+    .empty-state a { color: var(--forest); font-weight: 600; text-decoration: none; }
+
+    /* toast */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--earth); color: white; border-radius: 100px; padding: 12px 24px; font-size: 0.88rem; font-weight: 500; transition: transform 0.3s; z-index: 999; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      nav { padding: 12px 16px; }
+      .report-hero { padding: 24px 20px; }
+      .hero-title { font-size: 1.5rem; }
+      .hero-stats { gap: 10px; }
+      .card { padding: 18px; }
+      .tabs-wrap { gap: 4px; }
+      .tab-btn { font-size: 0.78rem; padding: 9px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div style="font-size:0.88rem; color:var(--muted);">Loading your report...</div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="logo">
+    <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="18" fill="#D8F3DC"/>
+      <path d="M18 28C18 28 10 22 10 16C10 11.6 13.6 8 18 8C22.4 8 26 11.6 26 16C26 22 18 28 18 28Z" fill="#2D6A4F"/>
+      <path d="M18 8C18 8 14 13 18 18C22 13 18 8 18 8Z" fill="#74C69D"/>
+      <rect x="17" y="22" width="2" height="6" rx="1" fill="#40916C"/>
+    </svg>
+    <div>
+      <div class="logo-text">Dharohar</div>
+      <div class="logo-sub">Your Carbon Legacy</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-streak" id="navStreak">🔥 0 day streak</span>
+    <span class="nav-user" id="navUser"></span>
+    <div class="nav-menu">
+      <button class="nav-menu-btn" id="menuBtn" onclick="toggleMenu()">
+        Pages
+        <svg class="chevron" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="dropdown" id="dropdown">
+        <a href="index.html">🏠 Home</a>
+        <a href="DailyTracker.html">📍 Daily Tracker</a>
+        <a href="report.html" class="active">📊 My Report</a>
+        <a href="suggestions.html">💡 AI Suggestions</a>
+        <a href="forest.html">🌳 My Forest</a>
+        <button class="btn-signout" onclick="handleSignOut()">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="report-hero">
+    <div class="hero-eyebrow">Your Carbon Journey</div>
+    <div class="hero-title" id="heroTitle">Your <em>Report</em></div>
+    <div class="hero-sub" id="heroSub">Loading your data...</div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:-16px;margin-bottom:20px;" id="baselineNote"></div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="heroToday">—</div>
+        <div class="hero-stat-label">Today's CO₂ (kg)</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="heroWeekAvg">—</div>
+        <div class="hero-stat-label">7-day average (kg)</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="heroSaved">—</div>
+        <div class="hero-stat-label">kg CO₂ saved total</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="heroStreak">—</div>
+        <div class="hero-stat-label">Day streak 🔥</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-wrap">
+    <button class="tab-btn active" onclick="switchTab('daily')">📅 Today</button>
+    <button class="tab-btn" onclick="switchTab('weekly')">📆 This Week</button>
+    <button class="tab-btn" onclick="switchTab('monthly')">🗓️ This Month</button>
+    <button class="tab-btn" onclick="switchTab('overall')">🌍 Overall</button>
+  </div>
+
+  <!-- ══════════════════ DAILY TAB ══════════════════ -->
+  <div class="tab-panel active" id="tab-daily">
+    <div id="dailyInsight"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div>
+          <div class="card-title">Today at a glance</div>
+          <div class="card-sub" id="dailyDate"></div>
+        </div>
+      </div>
+      <div class="stat-grid" id="dailyStatGrid"></div>
+      <div class="breakdown" id="dailyBreakdown"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🌿</div>
+        <div>
+          <div class="card-title">What this means for nature</div>
+          <div class="card-sub">Real-world equivalents of your footprint today</div>
+        </div>
+      </div>
+      <div class="nature-grid" id="dailyNature"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📈</div>
+        <div>
+          <div class="card-title">Your last 7 days</div>
+          <div class="card-sub">See how today fits into your recent trend</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="dailyTrendChart"></canvas>
+      </div>
+    </div>
+
+    <div class="cta-grid">
+      <a href="suggestions.html" class="cta-card green">
+        <div class="cta-icon">💡</div>
+        <div class="cta-title">Get AI suggestions</div>
+        <div class="cta-desc">Personalised tips to lower your footprint based on your data</div>
+        <div class="cta-arrow">Explore tips →</div>
+      </a>
+      <a href="forest.html" class="cta-card earth">
+        <div class="cta-icon">🌳</div>
+        <div class="cta-title">Visit my forest</div>
+        <div class="cta-desc">See the trees you've grown by keeping your CO₂ low</div>
+        <div class="cta-arrow">See your forest →</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ══════════════════ WEEKLY TAB ══════════════════ -->
+  <div class="tab-panel" id="tab-weekly">
+    <div id="weeklyInsight"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📆</div>
+        <div>
+          <div class="card-title">This week's numbers</div>
+          <div class="card-sub" id="weekRange"></div>
+        </div>
+      </div>
+      <div class="stat-grid" id="weeklyStatGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📅</div>
+        <div>
+          <div class="card-title">Day-by-day breakdown</div>
+          <div class="card-sub">How each day contributed this week</div>
+        </div>
+      </div>
+      <div class="day-rows" id="weekDayRows"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📉</div>
+        <div>
+          <div class="card-title">Weekly trend chart</div>
+          <div class="card-sub">Your CO₂ emissions this week vs the average Indian</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🌿</div>
+        <div>
+          <div class="card-title">Nature impact this week</div>
+          <div class="card-sub">What your week's emissions translate to in the real world</div>
+        </div>
+      </div>
+      <div class="nature-grid" id="weeklyNature"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MONTHLY TAB ══════════════════ -->
+  <div class="tab-panel" id="tab-monthly">
+    <div id="monthlyInsight"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🗓️</div>
+        <div>
+          <div class="card-title">This month at a glance</div>
+          <div class="card-sub" id="monthName"></div>
+        </div>
+      </div>
+      <div class="stat-grid" id="monthlyStatGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div>
+          <div class="card-title">Daily emissions this month</div>
+          <div class="card-sub">Your CO₂ each day — green is good, red is a rough day</div>
+        </div>
+      </div>
+      <div class="chart-wrap tall">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📅</div>
+        <div>
+          <div class="card-title">Month calendar</div>
+          <div class="card-sub">Every logged day at a glance — colour tells the story</div>
+        </div>
+      </div>
+      <div class="month-grid" id="monthCalendar"></div>
+      <div class="month-legend">
+        <div class="month-legend-item"><div class="month-legend-swatch" style="background:var(--leaf)"></div> Below avg</div>
+        <div class="month-legend-item"><div class="month-legend-swatch" style="background:var(--warn)"></div> At avg</div>
+        <div class="month-legend-item"><div class="month-legend-swatch" style="background:var(--danger)"></div> Above avg</div>
+        <div class="month-legend-item"><div class="month-legend-swatch" style="background:var(--border)"></div> No data</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🌍</div>
+        <div>
+          <div class="card-title">Monthly nature impact</div>
+          <div class="card-sub">What this month's footprint means for our planet</div>
+        </div>
+      </div>
+      <div class="nature-grid" id="monthlyNature"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ OVERALL TAB ══════════════════ -->
+  <div class="tab-panel" id="tab-overall">
+    <div id="overallInsight"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🌍</div>
+        <div>
+          <div class="card-title">Your overall performance</div>
+          <div class="card-sub">Since you started tracking with Dharohar</div>
+        </div>
+      </div>
+      <div class="perf-ring-wrap" id="perfRingWrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📈</div>
+        <div>
+          <div class="card-title">Emissions over time</div>
+          <div class="card-sub">Your full journey — is the line going down?</div>
+        </div>
+      </div>
+      <div class="chart-wrap tall">
+        <canvas id="overallChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🏆</div>
+        <div>
+          <div class="card-title">All-time stats</div>
+          <div class="card-sub">Everything you've achieved since day one</div>
+        </div>
+      </div>
+      <div class="stat-grid" id="overallStatGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🌿</div>
+        <div>
+          <div class="card-title">Total nature impact</div>
+          <div class="card-sub">The cumulative impact of all your choices</div>
+        </div>
+      </div>
+      <div class="nature-grid" id="overallNature"></div>
+    </div>
+
+    <div class="cta-grid">
+      <a href="suggestions.html" class="cta-card green">
+        <div class="cta-icon">💡</div>
+        <div class="cta-title">Get AI suggestions</div>
+        <div class="cta-desc">Let AI analyse your patterns and give you a personalised action plan</div>
+        <div class="cta-arrow">See suggestions →</div>
+      </a>
+      <a href="forest.html" class="cta-card earth">
+        <div class="cta-icon">🌳</div>
+        <div class="cta-title">My forest</div>
+        <div class="cta-desc">Every low-emission day grows a tree. See your grove.</div>
+        <div class="cta-arrow">Visit forest →</div>
+      </a>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<footer style="text-align:center; padding:20px; font-size:0.75rem; color:var(--muted);">🌿 Dharohar · Made with 🤍 in India 🇮🇳 · © 2026</footer>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const SUPABASE_URL  = 'https://yljfwnwrdsumaohbghnr.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsamZ3bndyZHN1bWFvaGJnaG5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjAwODIsImV4cCI6MjA5Njg5NjA4Mn0.5hUMp4A59waDhR_yDDf9KP7AIMsJ83bWtWbaXKsb9Hs'
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+})
+
+const NATIONAL_AVG = 5.2
+
+// ── ADAPTIVE BASELINE (mirrors DailyTracker.html logic) ──────
+// Phase 1 (<8 days):  national avg 5.2 kg
+// Phase 2 (8–29):     weighted blend toward personal avg
+// Phase 3 (30+ days): personal 30-day rolling avg × 0.95
+function computeAdaptiveBaseline(pastLogs) {
+  const n = pastLogs.length
+  if (n < 8) return { baseline: NATIONAL_AVG, label: 'avg Indian', phase: 1 }
+  const recent = pastLogs.slice(-30)
+  const personalAvg = recent.reduce((s, l) => s + l.total_co2_kg, 0) / recent.length
+  if (n < 30) {
+    const t = (n - 8) / (30 - 8)
+    const blended = parseFloat((NATIONAL_AVG * (1 - t) + personalAvg * t).toFixed(3))
+    return { baseline: blended, label: `blended target (${blended.toFixed(1)} kg)`, phase: 2 }
+  }
+  const target = parseFloat((personalAvg * 0.95).toFixed(3))
+  return { baseline: target, label: `your target (${target.toFixed(1)} kg)`, phase: 3 }
+}
+
+// Keep AVG_INDIAN as alias for chart reference lines — will be overridden per-context
+let AVG_INDIAN = NATIONAL_AVG
+const CHART_DEFAULTS = {
+  font: { family: 'Inter', size: 11 },
+  color: '#5a7a6a'
+}
+Chart.defaults.font = CHART_DEFAULTS.font
+Chart.defaults.color = CHART_DEFAULTS.color
+
+function sanitize(str) {
+  if (!str || typeof str !== 'string') return ''
+  return str.replace(/[<>"'`]/g, '').replace(/javascript:/gi, '').trim().slice(0, 100)
+}
+
+// ── AUTH ────────────────────────────────────────────
+async function guardPage() {
+  const { data: { session }, error } = await supabase.auth.getSession()
+  if (error || !session?.user) { window.location.replace('index.html'); return null }
+  const expiresAt = session.expires_at * 1000
+  if (Date.now() >= expiresAt) { await supabase.auth.signOut(); window.location.replace('index.html'); return null }
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidPattern.test(session.user.id)) { await supabase.auth.signOut(); window.location.replace('index.html'); return null }
+  return session.user
+}
+
+window.toggleMenu = () => {
+  document.getElementById('menuBtn').classList.toggle('open')
+  document.getElementById('dropdown').classList.toggle('open')
+}
+document.addEventListener('click', e => {
+  const m = document.querySelector('.nav-menu')
+  if (m && !m.contains(e.target)) {
+    document.getElementById('menuBtn').classList.remove('open')
+    document.getElementById('dropdown').classList.remove('open')
+  }
+})
+window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.replace('index.html') }
+
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = sanitize(msg)
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 3000)
+}
+
+// ── TAB SWITCH ──────────────────────────────────────
+window.switchTab = (tab) => {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    const tabs = ['daily','weekly','monthly','overall']
+    b.classList.toggle('active', tabs[i] === tab)
+  })
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+  document.getElementById(`tab-${tab}`).classList.add('active')
+}
+
+// ── HELPERS ─────────────────────────────────────────
+function fmtDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+}
+function fmtDay(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short' })
+}
+function co2Color(v) {
+  if (v < AVG_INDIAN * 0.7) return '#74C69D'
+  if (v < AVG_INDIAN)       return '#f39c12'
+  return '#e74c3c'
+}
+function co2Class(v) {
+  if (v < AVG_INDIAN * 0.7) return 'logged-good'
+  if (v < AVG_INDIAN)       return 'logged-mid'
+  return 'logged-bad'
+}
+function trendHTML(pct) {
+  if (pct === null) return ''
+  if (Math.abs(pct) < 2) return `<span class="trend flat">→ Steady</span>`
+  if (pct > 0) return `<span class="trend up">↑ ${pct.toFixed(0)}% vs last period</span>`
+  return `<span class="trend down">↓ ${Math.abs(pct).toFixed(0)}% vs last period</span>`
+}
+
+// Nature equivalents
+function natureCards(totalKg, scope) {
+  const trees   = (totalKg * 0.045).toFixed(2)
+  const water   = Math.round(totalKg * 3)
+  const driving = (totalKg / 0.16).toFixed(0)
+  const charges = Math.round(totalKg * 129)
+  const saved   = Math.max(0, AVG_INDIAN * (scope === 'day' ? 1 : scope === 'week' ? 7 : scope === 'month' ? 30 : 1) - totalKg).toFixed(2)
+  const isGood  = totalKg < AVG_INDIAN * (scope === 'day' ? 1 : scope === 'week' ? 7 : scope === 'month' ? 30 : 1)
+  return `
+    <div class="nature-card ${isGood ? 'positive' : ''}">
+      <div class="nature-emoji">🌳</div>
+      <div class="nature-num">${trees}</div>
+      <div class="nature-label">trees needed every day to absorb this CO₂</div>
+    </div>
+    <div class="nature-card">
+      <div class="nature-emoji">💧</div>
+      <div class="nature-num">${water}</div>
+      <div class="nature-label">litres of freshwater consumed at power plants</div>
+    </div>
+    <div class="nature-card ${isGood ? '' : 'negative'}">
+      <div class="nature-emoji">🚗</div>
+      <div class="nature-num">${driving}</div>
+      <div class="nature-label">km equivalent of riding Ola/Uber</div>
+    </div>
+    <div class="nature-card ${isGood ? 'positive' : ''}">
+      <div class="nature-emoji">${isGood ? '✅' : '📱'}</div>
+      <div class="nature-num">${isGood ? saved + ' kg' : charges}</div>
+      <div class="nature-label">${isGood ? 'CO₂ saved vs average Indian' : 'phone charges equivalent'}</div>
+    </div>
+  `
+}
+
+// Insight generator
+function buildInsight(name, context) {
+  const { avg7, today, weekTotal, monthAvg, trend, streak, allTimeAvg, daysLogged } = context
+  const insightEl = (type, icon, title, body) =>
+    `<div class="insight ${type}"><div class="insight-icon">${icon}</div><div><strong>${title}</strong>${body}</div></div>`
+
+  // Daily
+  if (context.scope === 'daily') {
+    if (today === null) return insightEl('info','📋',`No log found for today, ${name}`,`Head to the <a href="DailyTracker.html" style="color:inherit;font-weight:600;">Daily Tracker</a> to record your day — it only takes a minute!`)
+    if (today === 0) return insightEl('good','🎉',`Zero emissions today, ${name}!`,`That's extraordinary. You didn't log any travel, energy or food impact today. Keep it up!`)
+    const diff = (today - AVG_INDIAN).toFixed(2)
+    if (today < AVG_INDIAN * 0.5) return insightEl('gold','🏆',`Outstanding, ${name}!`,`You emitted only ${today.toFixed(2)} kg today — less than half your ${context.baselineLabel}. You're setting an example.`)
+    if (today < AVG_INDIAN) return insightEl('good','🌱',`Good work today, ${name}!`,`Your footprint of ${today.toFixed(2)} kg is ${Math.abs(diff)} kg below your ${context.baselineLabel}. Every kg below target counts.`)
+    if (today < AVG_INDIAN * 1.3) return insightEl('warn','⚠️',`Slightly above target today, ${name}`,`You emitted ${today.toFixed(2)} kg — ${diff} kg above your ${context.baselineLabel}. Small changes to travel or energy use tomorrow can bring this down.`)
+    return insightEl('bad','🔴',`High footprint today, ${name}`,`At ${today.toFixed(2)} kg, you're ${diff} kg above the average Indian today. Check the AI Suggestions page for ways to reduce this.`)
+  }
+
+  // Weekly
+  if (context.scope === 'weekly') {
+    const daysLogged7 = context.daysLogged7 || 0
+    if (daysLogged7 === 0) return insightEl('info','📋',`No data this week yet, ${name}`,`Start logging your daily activities and come back to see your weekly report.`)
+    const weekAvg = (weekTotal / daysLogged7).toFixed(2)
+    const weekSaved = ((AVG_INDIAN * daysLogged7) - weekTotal).toFixed(2)
+    if (trend < -10) return insightEl('gold','📉',`You're on a downward trend, ${name}!`,`Your emissions are dropping week-on-week — that's exactly what the planet needs. You've saved approximately ${Math.max(0,weekSaved)} kg CO₂ this week vs the average Indian.`)
+    if (trend > 15) return insightEl('bad','📈',`Emissions rising this week, ${name}`,`Your weekly average of ${weekAvg} kg/day is up ${trend.toFixed(0)}% from last week. Check which days were high and see if a pattern emerges.`)
+    if (weekTotal < AVG_INDIAN * daysLogged7 * 0.8) return insightEl('good','🌿',`Solid week, ${name}!`,`Your average of ${weekAvg} kg/day is well below your target. You've collectively saved about ${Math.abs(weekSaved)} kg CO₂ this week.`)
+    return insightEl('warn','📊',`Mixed week, ${name}`,`Your daily average this week was ${weekAvg} kg. Some days were great, others not so much. Check the day-by-day breakdown below to spot where you can improve.`)
+  }
+
+  // Monthly
+  if (context.scope === 'monthly') {
+    if (!context.daysLoggedMonth) return insightEl('info','📋',`No monthly data yet, ${name}`,`Keep logging daily and this page will fill up with your monthly story.`)
+    const monthlySaved = ((AVG_INDIAN * context.daysLoggedMonth) - (monthAvg * context.daysLoggedMonth)).toFixed(2)
+    if (monthAvg < AVG_INDIAN * 0.7) return insightEl('gold','🏆',`Exceptional month, ${name}!`,`An average of ${monthAvg.toFixed(2)} kg/day this month — you're consistently 30%+ below your target. Your forest must be growing beautifully.`)
+    if (monthAvg < AVG_INDIAN) return insightEl('good','🌱',`Good month overall, ${name}`,`Your monthly average of ${monthAvg.toFixed(2)} kg/day is below your target. You've saved roughly ${Math.max(0, monthlySaved)} kg CO₂ this month.`)
+    if (monthAvg < AVG_INDIAN * 1.2) return insightEl('warn','⚠️',`Room to improve this month, ${name}`,`Your average of ${monthAvg.toFixed(2)} kg/day is slightly above your ${AVG_INDIAN.toFixed(1)} kg target. Small consistent changes every day add up to big savings.`)
+    return insightEl('bad','🔴',`High emissions month, ${name}`,`Your monthly average of ${monthAvg.toFixed(2)} kg/day is significantly above the average Indian. Let's work on bringing this down — visit the AI Suggestions page for a personalised plan.`)
+  }
+
+  // Overall
+  if (context.scope === 'overall') {
+    if (daysLogged < 3) return insightEl('info','🌱',`Welcome to Dharohar, ${name}!`,`You've just started your journey. Log a few more days and you'll start seeing meaningful patterns here.`)
+    if (allTimeAvg < AVG_INDIAN * 0.7) return insightEl('gold','🏆',`You're a climate champion, ${name}!`,`With an all-time average of ${allTimeAvg.toFixed(2)} kg/day across ${daysLogged} logged days, you're consistently leading by example.`)
+    if (allTimeAvg < AVG_INDIAN) return insightEl('good','🌿',`You're making a real difference, ${name}`,`Your all-time average of ${allTimeAvg.toFixed(2)} kg/day is below your target. Over ${daysLogged} days, you've made a measurable impact.`)
+    if (trend < -5) return insightEl('good','📉',`You're improving, ${name}!`,`Even though your all-time average is above ideal, the trend is heading in the right direction. Keep going.`)
+    return insightEl('warn','⚠️',`You have potential, ${name}`,`Your all-time average of ${allTimeAvg.toFixed(2)} kg/day across ${daysLogged} days has room to improve. Small consistent changes — switching one commute to public transport, or reducing AC by 1 hour — compound over time.`)
+  }
+  return ''
+}
+
+// ── CHART HELPERS ────────────────────────────────────
+let charts = {}
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id] } }
+
+function makeLineChart(id, labels, datasets, options = {}) {
+  destroyChart(id)
+  const ctx = document.getElementById(id).getContext('2d')
+  charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 16 } }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { beginAtZero: true, grid: { color: '#e0ece6' }, ticks: { font: { size: 11 }, callback: v => v + ' kg' } }
+      },
+      ...options
+    }
+  })
+}
+
+function makeBarChart(id, labels, data, colors, options = {}) {
+  destroyChart(id)
+  const ctx = document.getElementById(id).getContext('2d')
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} kg CO₂` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: '#e0ece6' }, ticks: { font: { size: 11 }, callback: v => v + ' kg' } }
+      },
+      ...options
+    }
+  })
+}
+
+// ── MAIN INIT ────────────────────────────────────────
+async function init() {
+  const user = await guardPage()
+  if (!user) return
+  document.getElementById('loadingScreen').classList.add('hidden')
+
+  const userName = sanitize(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Friend').split(' ')[0]
+  document.getElementById('navUser').textContent = userName
+
+  // Profile
+  const { data: profile } = await supabase.from('profiles').select('current_streak, total_co2_saved_kg, total_trees_planted').eq('id', user.id).single()
+  const streak = profile?.current_streak || 0
+  const totalSaved = profile?.total_co2_saved_kg || 0
+  document.getElementById('navStreak').textContent = `🔥 ${streak} day streak`
+  document.getElementById('heroStreak').textContent = streak
+  document.getElementById('heroSaved').textContent = totalSaved.toFixed(1)
+
+  // Hero
+  const now = new Date()
+  const hour = now.getHours()
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  document.getElementById('heroTitle').innerHTML = `${greet}, <em>${userName}</em>`
+  document.getElementById('heroSub').textContent = `Here's a full picture of your carbon journey — honest, personal, and built from your own data.`
+
+  // Fetch last 90 days of logs
+  const ninetyDaysAgo = new Date(now); ninetyDaysAgo.setDate(now.getDate() - 89)
+  const fromDate = ninetyDaysAgo.toISOString().split('T')[0]
+  const { data: allLogs } = await supabase
+    .from('daily_logs')
+    .select('date, total_co2_kg, travel_co2_kg, energy_co2_kg')
+    .eq('user_id', user.id)
+    .gte('date', fromDate)
+    .order('date', { ascending: true })
+
+  const logs = allLogs || []
+  const logMap = {}
+  logs.forEach(l => { logMap[l.date] = l })
+
+  const todayStr = now.toISOString().split('T')[0]
+  const todayLog = logMap[todayStr] || null
+
+  // ── ADAPTIVE BASELINE ──────────────────────────────────────
+  // Exclude today — baseline is always built from completed past days
+  const pastLogs = logs.filter(l => l.date !== todayStr)
+  const { baseline, label: baselineLabel, phase: baselinePhase } = computeAdaptiveBaseline(pastLogs)
+  AVG_INDIAN = baseline   // override the global so all charts/insights use it
+
+  // Show which phase the user is in — helps them understand the number
+  const phaseNote = baselinePhase === 1
+    ? `Comparing vs national average (5.2 kg). Log 8+ days to switch to your personal target.`
+    : baselinePhase === 2
+    ? `Your target is blending from national average toward your personal average as you log more days.`
+    : `Your target is 5% below your recent average — keeps improving as you do.`
+  document.getElementById('baselineNote').textContent = phaseNote
+
+  // ── DAILY ────────────────────────────────────────
+  const todayVal = todayLog?.total_co2_kg ?? null
+  document.getElementById('heroToday').textContent = todayVal !== null ? todayVal.toFixed(1) : '—'
+  document.getElementById('dailyDate').textContent = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+  // last 7 days for context
+  const last7 = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setDate(now.getDate() - i)
+    const ds = d.toISOString().split('T')[0]
+    last7.push({ date: ds, val: logMap[ds]?.total_co2_kg ?? null })
+  }
+  const validLast7 = last7.filter(x => x.val !== null)
+  const avg7 = validLast7.length ? validLast7.reduce((s, x) => s + x.val, 0) / validLast7.length : null
+  document.getElementById('heroWeekAvg').textContent = avg7 !== null ? avg7.toFixed(1) : '—'
+
+  // Daily insight
+  document.getElementById('dailyInsight').innerHTML = buildInsight(userName, { scope: 'daily', today: todayVal, avg7, baselineLabel: baselineLabel.replace(/\s*\([^)]*\)/, '') })
+
+  // Daily stat grid
+  if (todayVal !== null) {
+    const travelKg = todayLog?.travel_co2_kg ?? 0
+    const energyKg = todayLog?.energy_co2_kg ?? 0
+    const diff = (todayVal - AVG_INDIAN).toFixed(2)
+    document.getElementById('dailyStatGrid').innerHTML = `
+      <div class="stat-box ${todayVal < AVG_INDIAN ? 'highlight' : 'red-box'}">
+        <div class="stat-num">${todayVal.toFixed(2)}</div>
+        <div class="stat-unit">kg CO₂</div>
+        <div class="stat-label">Total today</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">${travelKg.toFixed(2)}</div>
+        <div class="stat-unit">kg</div>
+        <div class="stat-label">🚗 Travel</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">${energyKg.toFixed(2)}</div>
+        <div class="stat-unit">kg</div>
+        <div class="stat-label">🏠 Home energy</div>
+      </div>
+      <div class="stat-box ${todayVal < AVG_INDIAN ? 'highlight' : 'red-box'}">
+        <div class="stat-num">${todayVal < AVG_INDIAN ? '-' : '+'}${Math.abs(diff)}</div>
+        <div class="stat-unit">kg</div>
+        <div class="stat-label">vs ${baselineLabel}</div>
+      </div>
+    `
+    // Breakdown bar
+    const total = todayVal || 0.01
+    const tp = (travelKg / total * 100).toFixed(1)
+    const ep = (energyKg / total * 100).toFixed(1)
+    document.getElementById('dailyBreakdown').innerHTML = `
+      <div class="breakdown-label"><span>Emissions breakdown</span><span>${todayVal.toFixed(2)} kg total</span></div>
+      <div class="breakdown-track">
+        <div style="display:flex;height:100%">
+          <div class="breakdown-fill" style="width:${tp}%;background:#2D6A4F"></div>
+          <div class="breakdown-fill" style="width:${ep}%;background:#74C69D"></div>
+        </div>
+      </div>
+      <div class="breakdown-legend">
+        <div class="legend-dot"><div class="dot" style="background:#2D6A4F"></div>Travel (${tp}%)</div>
+        <div class="legend-dot"><div class="dot" style="background:#74C69D"></div>Home energy (${ep}%)</div>
+      </div>
+    `
+    document.getElementById('dailyNature').innerHTML = natureCards(todayVal, 'day')
+  } else {
+    document.getElementById('dailyStatGrid').innerHTML = `<div class="empty-state"><div class="e-icon">📋</div><p>No log yet today.<br><a href="dashboard.html">Go to Daily Tracker →</a></p></div>`
+    document.getElementById('dailyNature').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><p>Log today's activities to see your nature impact.</p></div>`
+  }
+
+  // Daily 7-day trend chart
+  const l7Labels = last7.map(x => fmtDay(x.date))
+  const l7Data   = last7.map(x => x.val)
+  makeLineChart('dailyTrendChart',
+    l7Labels,
+    [
+      { label: 'Your CO₂ (kg)', data: l7Data, borderColor: '#2D6A4F', backgroundColor: 'rgba(45,106,79,0.08)', tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: l7Data.map(v => v === null ? 'transparent' : co2Color(v || 0)), spanGaps: true },
+      { label: `Target (${AVG_INDIAN.toFixed(1)} kg)`, data: Array(7).fill(AVG_INDIAN), borderColor: '#e74c3c', borderDash: [6,4], pointRadius: 0, borderWidth: 1.5 }
+    ]
+  )
+
+  // ── WEEKLY ───────────────────────────────────────
+  // Mon–Sun of current week
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))
+  const weekDays = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(weekStart.getDate() + i)
+    const ds = d.toISOString().split('T')[0]
+    weekDays.push({ date: ds, val: logMap[ds]?.total_co2_kg ?? null, dayName: d.toLocaleDateString('en-IN',{weekday:'short'}), isToday: ds === todayStr })
+  }
+  const validWeek = weekDays.filter(x => x.val !== null)
+  const weekTotal = validWeek.reduce((s, x) => s + x.val, 0)
+  const weekAvgNum = validWeek.length ? weekTotal / validWeek.length : null
+
+  // Last week for trend
+  const prevWeekDays = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(weekStart.getDate() - 7 + i)
+    const ds = d.toISOString().split('T')[0]
+    prevWeekDays.push(logMap[ds]?.total_co2_kg ?? null)
+  }
+  const validPrevWeek = prevWeekDays.filter(v => v !== null)
+  const prevWeekAvg = validPrevWeek.length ? validPrevWeek.reduce((s, v) => s + v, 0) / validPrevWeek.length : null
+  const weekTrend = (weekAvgNum !== null && prevWeekAvg !== null) ? ((weekAvgNum - prevWeekAvg) / prevWeekAvg * 100) : null
+
+  document.getElementById('weekRange').textContent = `${fmtDate(weekDays[0].date)} – ${fmtDate(weekDays[6].date)}`
+  document.getElementById('weeklyInsight').innerHTML = buildInsight(userName, { scope: 'weekly', weekTotal, daysLogged7: validWeek.length, trend: weekTrend })
+
+  document.getElementById('weeklyStatGrid').innerHTML = `
+    <div class="stat-box ${weekAvgNum !== null && weekAvgNum < AVG_INDIAN ? 'highlight' : ''}">
+      <div class="stat-num">${weekTotal.toFixed(2)}</div>
+      <div class="stat-unit">kg CO₂</div>
+      <div class="stat-label">Total this week</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${weekAvgNum !== null ? weekAvgNum.toFixed(2) : '—'}</div>
+      <div class="stat-unit">kg/day</div>
+      <div class="stat-label">Daily average</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${validWeek.length}</div>
+      <div class="stat-unit">of 7 days</div>
+      <div class="stat-label">Days logged</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${weekTrend !== null ? (weekTrend > 0 ? '+' : '') + weekTrend.toFixed(0) + '%' : '—'}</div>
+      <div class="stat-unit"></div>
+      <div class="stat-label">vs last week ${weekTrend !== null ? (weekTrend < 0 ? '↓ improving' : '↑ rising') : ''}</div>
+    </div>
+  `
+
+  // Day rows
+  const maxDay = Math.max(...weekDays.map(x => x.val || 0), AVG_INDIAN)
+  document.getElementById('weekDayRows').innerHTML = weekDays.map(x => {
+    const pct = x.val !== null ? (x.val / maxDay * 100).toFixed(0) : 0
+    const barColor = x.val !== null ? co2Color(x.val) : '#e0ece6'
+    let badgeClass = 'badge-na', badgeText = 'No log'
+    if (x.val !== null) {
+      badgeClass = x.val < AVG_INDIAN ? 'badge-good' : x.val < AVG_INDIAN * 1.3 ? 'badge-warn' : 'badge-bad'
+      badgeText = x.val < AVG_INDIAN ? 'Below avg' : x.val < AVG_INDIAN * 1.3 ? 'Near avg' : 'Above avg'
+    }
+    return `
+      <div class="day-row ${x.isToday ? 'today' : ''}">
+        <div class="day-name">${x.dayName}</div>
+        <div class="day-date">${fmtDate(x.date)}</div>
+        <div class="day-bar-wrap"><div class="day-bar" style="width:${pct}%;background:${barColor}"></div></div>
+        <div class="day-kg">${x.val !== null ? x.val.toFixed(2) + ' kg' : '—'}</div>
+        <div class="day-badge ${badgeClass}">${badgeText}</div>
+      </div>
+    `
+  }).join('')
+
+  // Weekly chart
+  makeLineChart('weeklyChart',
+    weekDays.map(x => x.dayName),
+    [
+      { label: 'Your CO₂ (kg)', data: weekDays.map(x => x.val), borderColor: '#2D6A4F', backgroundColor: 'rgba(45,106,79,0.08)', tension: 0.4, fill: true, pointRadius: 6, pointBackgroundColor: weekDays.map(x => x.val !== null ? co2Color(x.val) : 'transparent'), spanGaps: true },
+      { label: `Target (${AVG_INDIAN.toFixed(1)} kg)`, data: Array(7).fill(AVG_INDIAN), borderColor: '#e74c3c', borderDash: [6,4], pointRadius: 0, borderWidth: 1.5 }
+    ]
+  )
+
+  document.getElementById('weeklyNature').innerHTML = weekTotal > 0 ? natureCards(weekTotal, 'week') : `<div class="empty-state" style="grid-column:1/-1"><p>Log more days to see your weekly nature impact.</p></div>`
+
+  // ── MONTHLY ──────────────────────────────────────
+  const monthYear = now.getFullYear(), monthIdx = now.getMonth()
+  const monthStart = new Date(monthYear, monthIdx, 1)
+  const monthEnd   = new Date(monthYear, monthIdx + 1, 0)
+  document.getElementById('monthName').textContent = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+
+  const monthDays = []
+  for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+    const ds = d.toISOString().split('T')[0]
+    monthDays.push({ date: ds, val: logMap[ds]?.total_co2_kg ?? null, day: d.getDate(), isToday: ds === todayStr })
+  }
+  const validMonth = monthDays.filter(x => x.val !== null)
+  const monthTotal = validMonth.reduce((s, x) => s + x.val, 0)
+  const monthAvgNum = validMonth.length ? monthTotal / validMonth.length : null
+
+  // Last month trend
+  const lastMonthStart = new Date(monthYear, monthIdx - 1, 1)
+  const lastMonthEnd   = new Date(monthYear, monthIdx, 0)
+  const lastMonthLogs  = logs.filter(l => l.date >= lastMonthStart.toISOString().split('T')[0] && l.date <= lastMonthEnd.toISOString().split('T')[0])
+  const lastMonthAvg   = lastMonthLogs.length ? lastMonthLogs.reduce((s, l) => s + l.total_co2_kg, 0) / lastMonthLogs.length : null
+  const monthTrend     = (monthAvgNum && lastMonthAvg) ? ((monthAvgNum - lastMonthAvg) / lastMonthAvg * 100) : null
+
+  document.getElementById('monthlyInsight').innerHTML = buildInsight(userName, { scope: 'monthly', monthAvg: monthAvgNum, daysLoggedMonth: validMonth.length, trend: monthTrend })
+
+  document.getElementById('monthlyStatGrid').innerHTML = `
+    <div class="stat-box ${monthAvgNum !== null && monthAvgNum < AVG_INDIAN ? 'highlight' : ''}">
+      <div class="stat-num">${monthTotal.toFixed(2)}</div>
+      <div class="stat-unit">kg CO₂</div>
+      <div class="stat-label">Month total</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${monthAvgNum !== null ? monthAvgNum.toFixed(2) : '—'}</div>
+      <div class="stat-unit">kg/day</div>
+      <div class="stat-label">Daily average</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${validMonth.length}</div>
+      <div class="stat-unit">days</div>
+      <div class="stat-label">Days logged</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${monthTrend !== null ? (monthTrend > 0 ? '+' : '') + monthTrend.toFixed(0) + '%' : '—'}</div>
+      <div class="stat-unit"></div>
+      <div class="stat-label">vs last month ${monthTrend !== null ? (monthTrend < 0 ? '↓ improving' : '↑ rising') : ''}</div>
+    </div>
+  `
+
+  // Monthly bar chart
+  makeBarChart('monthlyChart',
+    monthDays.map(x => x.day),
+    monthDays.map(x => x.val),
+    monthDays.map(x => x.val !== null ? co2Color(x.val) : '#e0ece6'),
+    {
+      plugins: {
+        legend: { display: false },
+        annotation: {},
+        tooltip: { callbacks: { title: ctx => `Day ${ctx[0].label}`, label: ctx => ctx.parsed.y !== null ? ` ${ctx.parsed.y.toFixed(2)} kg CO₂` : ' No data' } }
+      }
+    }
+  )
+
+  // Calendar
+  const firstDow = monthStart.getDay() === 0 ? 6 : monthStart.getDay() - 1 // Mon=0
+  const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+  let calHTML = dayLabels.map(d => `<div class="month-day-label">${d}</div>`).join('')
+  for (let i = 0; i < firstDow; i++) calHTML += `<div class="month-cell empty"></div>`
+  monthDays.forEach(x => {
+    const cls = [
+      'month-cell',
+      x.val !== null ? co2Class(x.val) : '',
+      x.isToday ? 'today-cell' : ''
+    ].filter(Boolean).join(' ')
+    const title = x.val !== null ? `${x.val.toFixed(2)} kg` : 'No data'
+    calHTML += `<div class="${cls}" title="${title}">${x.day}</div>`
+  })
+  document.getElementById('monthCalendar').innerHTML = calHTML
+  document.getElementById('monthlyNature').innerHTML = monthTotal > 0 ? natureCards(monthTotal, 'month') : `<div class="empty-state" style="grid-column:1/-1"><p>Log more days to see your monthly nature impact.</p></div>`
+
+  // ── OVERALL ──────────────────────────────────────
+  const allTimeAvg = logs.length ? logs.reduce((s, l) => s + l.total_co2_kg, 0) / logs.length : null
+  const allTimeTotal = logs.reduce((s, l) => s + l.total_co2_kg, 0)
+  const bestDay = logs.length ? logs.reduce((a, b) => a.total_co2_kg < b.total_co2_kg ? a : b) : null
+  const worstDay = logs.length ? logs.reduce((a, b) => a.total_co2_kg > b.total_co2_kg ? a : b) : null
+
+  // Overall trend: compare first half vs second half
+  let overallTrend = null
+  if (logs.length >= 6) {
+    const half = Math.floor(logs.length / 2)
+    const firstHalfAvg = logs.slice(0, half).reduce((s, l) => s + l.total_co2_kg, 0) / half
+    const secondHalfAvg = logs.slice(half).reduce((s, l) => s + l.total_co2_kg, 0) / (logs.length - half)
+    overallTrend = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg * 100)
+  }
+
+  document.getElementById('overallInsight').innerHTML = buildInsight(userName, { scope: 'overall', allTimeAvg, daysLogged: logs.length, trend: overallTrend })
+
+  // Performance ring
+  const perfScore = allTimeAvg !== null ? Math.max(0, Math.min(100, ((AVG_INDIAN - allTimeAvg) / AVG_INDIAN * 100 + 50))) : 50
+  const ringColor = allTimeAvg !== null ? co2Color(allTimeAvg) : '#e0ece6'
+  const circumference = 2 * Math.PI * 42
+  const dashOffset = circumference * (1 - perfScore / 100)
+  const perfLabel = perfScore >= 70 ? `Great, ${userName}!` : perfScore >= 50 ? `Good progress` : `Room to grow`
+  const perfBody = allTimeAvg !== null
+    ? `Your all-time daily average is <strong>${allTimeAvg.toFixed(2)} kg CO₂</strong>. ${overallTrend !== null ? (overallTrend < 0 ? `📉 Your recent emissions are trending down — you're improving!` : `📈 Your recent emissions are slightly up. Try to bring it back down.`) : ''}`
+    : `Start logging daily to build up your performance score.`
+
+  document.getElementById('perfRingWrap').innerHTML = `
+    <div class="perf-ring">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle cx="55" cy="55" r="42" fill="none" stroke="#e0ece6" stroke-width="10"/>
+        <circle cx="55" cy="55" r="42" fill="none" stroke="${ringColor}" stroke-width="10"
+          stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"
+          stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
+      </svg>
+      <div class="perf-ring-num">
+        <div class="perf-ring-pct">${Math.round(perfScore)}</div>
+        <div class="perf-ring-label">score</div>
+      </div>
+    </div>
+    <div class="perf-text">
+      <h3>${perfLabel}</h3>
+      <p>${perfBody}</p>
+    </div>
+  `
+
+  // Overall chart (last 90 days)
+  makeLineChart('overallChart',
+    logs.map(l => fmtDate(l.date)),
+    [
+      { label: 'Daily CO₂ (kg)', data: logs.map(l => l.total_co2_kg), borderColor: '#2D6A4F', backgroundColor: 'rgba(45,106,79,0.07)', tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: logs.map(l => co2Color(l.total_co2_kg)) },
+      { label: `Target (${AVG_INDIAN.toFixed(1)} kg)`, data: Array(logs.length).fill(AVG_INDIAN), borderColor: '#e74c3c', borderDash: [6,4], pointRadius: 0, borderWidth: 1.5 }
+    ]
+  )
+
+  // Overall stat grid
+  const daysBelow = logs.filter(l => l.total_co2_kg < AVG_INDIAN).length
+  document.getElementById('overallStatGrid').innerHTML = `
+    <div class="stat-box ${allTimeAvg !== null && allTimeAvg < AVG_INDIAN ? 'highlight' : ''}">
+      <div class="stat-num">${allTimeAvg !== null ? allTimeAvg.toFixed(2) : '—'}</div>
+      <div class="stat-unit">kg/day</div>
+      <div class="stat-label">All-time average</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${logs.length}</div>
+      <div class="stat-unit">days</div>
+      <div class="stat-label">Total days logged</div>
+    </div>
+    <div class="stat-box highlight">
+      <div class="stat-num">${daysBelow}</div>
+      <div class="stat-unit">days</div>
+      <div class="stat-label">Days below ${baselineLabel}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${bestDay ? bestDay.total_co2_kg.toFixed(2) : '—'}</div>
+      <div class="stat-unit">kg</div>
+      <div class="stat-label">🌟 Best day (${bestDay ? fmtDate(bestDay.date) : ''})</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${worstDay ? worstDay.total_co2_kg.toFixed(2) : '—'}</div>
+      <div class="stat-unit">kg</div>
+      <div class="stat-label">⚠️ Highest day (${worstDay ? fmtDate(worstDay.date) : ''})</div>
+    </div>
+    <div class="stat-box highlight">
+      <div class="stat-num">${totalSaved.toFixed(1)}</div>
+      <div class="stat-unit">kg</div>
+      <div class="stat-label">🌿 Total CO₂ saved</div>
+    </div>
+  `
+
+  document.getElementById('overallNature').innerHTML = allTimeTotal > 0 ? natureCards(allTimeTotal, 'all') : `<div class="empty-state" style="grid-column:1/-1"><p>Log more days to see your overall nature impact.</p></div>`
+}
+
+init()
+</script>
+</body>
+</html>

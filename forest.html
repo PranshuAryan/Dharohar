@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-Frame-Options" content="DENY"/>
+  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+  <title>Dharohar — My Living Forest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --forest:      #2D6A4F;
+      --forest-mid:  #40916C;
+      --leaf:        #74C69D;
+      --leaf-light:  #D8F3DC;
+      --sky:         #E8F4FD;
+      --earth:       #1B3A2D;
+      --cream:       #F7FBFF;
+      --text:        #1a2e22;
+      --muted:       #5a7a6a;
+      --border:      #e0ece6;
+      --white:       #ffffff;
+      --danger:      #c0392b;
+      --gold:        #f39c12;
+      --gold-bg:     #fffbf0;
+    }
+    html, body { min-height: 100%; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--text); overflow-x: hidden; }
+
+    /* ── NAV (consistent with other pages) ── */
+    nav {
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; }
+    .logo-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--forest); }
+    .logo-sub  { font-size: 0.6rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user  { font-size: 0.82rem; color: var(--muted); }
+    .nav-streak { background: var(--leaf-light); color: var(--forest); border-radius: 100px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; }
+    .nav-menu { position: relative; }
+    .nav-menu-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.75); backdrop-filter: blur(10px);
+      border: 1px solid rgba(45,106,79,0.18); border-radius: 100px;
+      padding: 7px 14px; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600; color: var(--forest); cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-menu-btn:hover { background: white; }
+    .nav-menu-btn .chevron { width: 14px; height: 14px; transition: transform 0.2s; }
+    .nav-menu-btn.open .chevron { transform: rotate(180deg); }
+    .dropdown {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+      border: 1px solid rgba(45,106,79,0.12); border-radius: 16px;
+      padding: 8px; min-width: 200px;
+      box-shadow: 0 12px 40px rgba(27,58,45,0.14); z-index: 200;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      text-decoration: none; font-size: 0.85rem; font-weight: 500; color: var(--text);
+      transition: background 0.15s;
+    }
+    .dropdown a:hover, .dropdown a.active { background: var(--leaf-light); color: var(--forest); }
+    .btn-signout {
+      width: 100%; margin-top: 6px; padding: 9px;
+      background: transparent; border: 1px solid #ffd0d0;
+      border-radius: 10px; color: var(--danger); font-size: 0.82rem;
+      font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-signout:hover { background: #fff0f0; }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 920px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* ── HEADER ── */
+    .header-row {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 22px;
+    }
+    .header-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--earth); }
+    .header-sub   { font-size: 0.84rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── SKY + FOREST SCENE ── */
+    .forest-scene {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      border-radius: 24px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #BEE3F8 0%, #DCEFFB 35%, #EAF7EE 70%, #DDF0E2 100%);
+      margin-bottom: 18px;
+      box-shadow: 0 8px 32px rgba(45,106,79,0.12);
+    }
+
+    /* sun */
+    .sun {
+      position: absolute; top: 30px; right: 50px;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: radial-gradient(circle, #fff6d8 0%, #ffe9a8 60%, rgba(255,233,168,0) 100%);
+      box-shadow: 0 0 50px 14px rgba(255,230,150,0.5);
+      animation: sunPulse 5s ease-in-out infinite;
+    }
+    @keyframes sunPulse { 0%,100%{opacity:.9;} 50%{opacity:1;} }
+
+    /* clouds */
+    .cloud {
+      position: absolute; background: white; border-radius: 50px; opacity: .55; filter: blur(1.5px);
+      animation: drift linear infinite;
+    }
+    .cloud::before, .cloud::after { content:''; position:absolute; background:white; border-radius:50%; }
+    .fc1 { width:90px; height:28px; top:10%; left:-120px; animation-duration:46s; }
+    .fc1::before { width:46px; height:38px; top:-18px; left:14px; }
+    .fc1::after  { width:34px; height:28px; top:-12px; left:42px; }
+    .fc2 { width:70px; height:22px; top:22%; left:-100px; animation-duration:60s; animation-delay:8s; opacity:.4; }
+    .fc2::before { width:34px; height:28px; top:-14px; left:10px; }
+    .fc2::after  { width:26px; height:22px; top:-9px; left:30px; }
+    @keyframes drift { from{transform:translateX(0);} to{transform:translateX(calc(100% + 200px));} }
+
+    /* birds */
+    .fbird { position:absolute; width:14px; height:5px; border-top:1.6px solid #5BA4CF; border-radius:50% 50% 0 0; opacity:.4; }
+
+    /* ground */
+    .ground {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 130px;
+      background: linear-gradient(180deg, #B7E4C7 0%, #95D5B2 40%, #74C69D 100%);
+    }
+    .ground::before {
+      content: ''; position: absolute; top: -14px; left: 0; width: 100%; height: 20px;
+      background: #B7E4C7;
+      clip-path: polygon(0 100%, 5% 40%, 12% 80%, 20% 30%, 30% 70%, 40% 20%, 50% 65%, 60% 25%, 70% 75%, 80% 35%, 90% 70%, 100% 30%, 100% 100%);
+    }
+
+    /* forest container — trees placed dynamically */
+    .tree-layer { position: absolute; bottom: 14px; left: 0; width: 100%; height: 200px; }
+    .tree-sprite {
+      position: absolute; bottom: 0; transform-origin: bottom center;
+      transform: scale(0); opacity: 0;
+      transition: transform 0.6s cubic-bezier(.34,1.56,.64,1), opacity 0.4s;
+    }
+    .tree-sprite.grown { transform: scale(1); opacity: 1; }
+    .tree-sprite.swaying { animation: sway 4s ease-in-out infinite; }
+    @keyframes sway { 0%,100%{transform:scale(1) rotate(0deg);} 50%{transform:scale(1) rotate(1.5deg);} }
+
+    /* sparkle/firefly particles for magic feel */
+    .sparkle {
+      position: absolute; width: 4px; height: 4px; background: #fff8d0;
+      border-radius: 50%; opacity: 0; pointer-events: none;
+      animation: sparkleFloat 3s ease-in-out infinite;
+    }
+    @keyframes sparkleFloat {
+      0% { opacity: 0; transform: translateY(0) scale(0.5); }
+      30% { opacity: .8; }
+      100% { opacity: 0; transform: translateY(-40px) scale(1); }
+    }
+
+    /* scene overlay stats */
+    .scene-overlay {
+      position: absolute; top: 18px; left: 18px;
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);
+      border-radius: 16px; padding: 14px 18px;
+      box-shadow: 0 6px 20px rgba(27,58,45,0.1);
+    }
+    .scene-overlay-num { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:700; color:var(--forest); }
+    .scene-overlay-label { font-size:0.72rem; color:var(--muted); margin-top:1px; }
+
+    .scene-empty-msg {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px; text-align: center; padding: 20px;
+      background: rgba(255,255,255,0.0);
+    }
+    .scene-empty-msg.hidden { display: none; }
+    .scene-empty-emoji { font-size: 2.2rem; }
+    .scene-empty-text { font-size: 0.88rem; color: var(--forest); font-weight: 600; max-width: 280px; }
+    .scene-empty-sub { font-size: 0.78rem; color: var(--muted); max-width: 280px; }
+
+    /* loading shimmer while trees grow in */
+    .growth-caption {
+      text-align: center; font-size: 0.82rem; color: var(--muted);
+      margin-bottom: 22px; min-height: 20px;
+    }
+    .growth-caption strong { color: var(--forest); }
+
+    /* ── STAT CARDS ── */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px; margin-bottom: 22px;
+    }
+    .stat-card {
+      background: white; border: 1px solid var(--border); border-radius: 16px;
+      padding: 18px 16px; text-align: center;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-emoji { font-size: 1.5rem; margin-bottom: 6px; }
+    .stat-num   { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--earth); }
+    .stat-unit  { font-size: 0.72rem; color: var(--muted); }
+    .stat-label { font-size: 0.76rem; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+
+    /* ── EQUIVALENTS SECTION ── */
+    .section {
+      background: white; border: 1px solid var(--border); border-radius: 18px;
+      padding: 24px; margin-bottom: 18px;
+    }
+    .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px; background: var(--leaf-light);
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--earth); }
+    .section-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    .equiv-list { display: flex; flex-direction: column; gap: 10px; }
+    .equiv-item {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--cream); border-radius: 12px; padding: 14px 16px;
+    }
+    .equiv-emoji { font-size: 1.6rem; flex-shrink: 0; width: 36px; text-align: center; }
+    .equiv-text  { font-size: 0.86rem; color: var(--text); line-height: 1.5; }
+    .equiv-text strong { color: var(--forest); }
+
+    /* tree species legend */
+    .legend-row {
+      display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--muted); }
+    .legend-dot  { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── SHARE CARD MODAL ── */
+    .share-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(27,58,45,0.6); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .share-overlay.active { display: flex; }
+    .share-modal {
+      background: white; border-radius: 24px; padding: 0; max-width: 380px; width: 100%;
+      overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+      animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from{transform:scale(.85);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+    /* shareable card itself */
+    .share-card {
+      position: relative; width: 100%; aspect-ratio: 4/5;
+      background: linear-gradient(180deg, #BEE3F8 0%, #DCEFFB 30%, #EAF7EE 65%, #74C69D 100%);
+      padding: 26px 22px; display: flex; flex-direction: column; justify-content: space-between;
+      overflow: hidden;
+    }
+    .share-card-top { position: relative; z-index: 2; }
+    .share-brand { display:flex; align-items:center; gap:8px; }
+    .share-brand-icon { width:24px; height:24px; }
+    .share-brand-name { font-family:'Playfair Display',serif; font-weight:700; color:var(--forest); font-size:0.95rem; }
+    .share-headline {
+      font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700;
+      color: var(--earth); margin-top: 14px; line-height: 1.3;
+    }
+    .share-sub { font-size: 0.78rem; color: var(--forest-mid); margin-top: 4px; font-weight: 600; }
+
+    .share-card-trees {
+      position: absolute; bottom: 70px; left: 0; width: 100%; height: 110px; z-index: 1;
+    }
+
+    .share-card-bottom {
+      position: relative; z-index: 2; display: flex; align-items: flex-end; justify-content: space-between;
+    }
+    .share-stat-big { font-family:'Playfair Display',serif; font-size:2.1rem; font-weight:700; color:white; text-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .share-stat-label { font-size:0.7rem; color: rgba(255,255,255,0.9); font-weight:600; }
+    .share-tag { background: rgba(255,255,255,0.85); border-radius: 100px; padding: 5px 12px; font-size: 0.68rem; font-weight: 600; color: var(--forest); }
+
+    .share-actions { padding: 0 22px 22px; display: flex; gap: 10px; }
+    .share-link-row {
+      padding: 0 22px 14px; display: flex; gap: 8px; align-items: center;
+    }
+    .share-link-input {
+      flex: 1; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 0.78rem;
+      background: var(--cream); color: var(--muted); outline: none;
+    }
+    .btn-copy-link {
+      flex-shrink: 0; padding: 10px 16px; background: var(--leaf-light);
+      color: var(--forest); border: none; border-radius: 10px;
+      font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-copy-link:hover { background: #c5ebd2; }
+    .btn-share-action {
+      flex: 1; padding: 12px; border-radius: 12px; border: none;
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-share-primary { background: var(--forest); color: white; }
+    .btn-share-primary:hover { background: var(--forest-mid); transform: translateY(-1px); }
+    .btn-share-secondary { background: var(--leaf-light); color: var(--forest); }
+    .btn-share-secondary:hover { background: #c5ebd2; }
+    .btn-share-close {
+      position: absolute; top: 14px; right: 14px; z-index: 5;
+      width: 30px; height: 30px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,0.85); color: var(--earth); font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* CTA button to open share modal */
+    .btn-share-cta {
+      width: 100%; padding: 16px; background: var(--forest); color: white;
+      border: none; border-radius: 14px; font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(45,106,79,0.25);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-share-cta:hover { background: var(--forest-mid); transform: translateY(-1px); }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--earth); color: white; border-radius: 100px;
+      padding: 12px 24px; font-size: 0.88rem; font-weight: 500;
+      transition: transform 0.3s; z-index: 999; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* loading screen */
+    .loading-screen {
+      position: fixed; inset: 0; background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px; z-index: 500;
+    }
+    .loading-screen.hidden { display: none; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--forest); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer { text-align: center; padding: 20px; font-size: 0.75rem; color: var(--muted); }
+
+    @media (max-width: 560px) {
+      .forest-scene { height: 320px; }
+      .header-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div style="font-size:0.88rem; color:var(--muted);">Growing your forest...</div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="logo">
+    <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="18" fill="#D8F3DC"/>
+      <path d="M18 28C18 28 10 22 10 16C10 11.6 13.6 8 18 8C22.4 8 26 11.6 26 16C26 22 18 28 18 28Z" fill="#2D6A4F"/>
+      <path d="M18 8C18 8 14 13 18 18C22 13 18 8 18 8Z" fill="#74C69D"/>
+      <rect x="17" y="22" width="2" height="6" rx="1" fill="#40916C"/>
+    </svg>
+    <div>
+      <div class="logo-text">Dharohar</div>
+      <div class="logo-sub">Your Carbon Legacy</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-streak" id="navStreak">🔥 0 day streak</span>
+    <span class="nav-user" id="navUser"></span>
+    <div class="nav-menu">
+      <button class="nav-menu-btn" id="menuBtn" onclick="toggleMenu()">
+        Pages
+        <svg class="chevron" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="dropdown" id="dropdown">
+        <a href="index.html">🏠 Home</a>
+        <a href="DailyTracker.html">📍 Daily Tracker</a>
+        <a href="report.html">📊 My Report</a>
+        <a href="suggestions.html">💡 AI Suggestions</a>
+        <a href="forest.html" class="active">🌳 My Forest</a>
+        <button class="btn-signout" onclick="handleSignOut()">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header-row">
+    <div>
+      <div class="header-title">🌳 My Living Forest</div>
+      <div class="header-sub" id="headerSub">Every kg of CO₂ you save plants something new here</div>
+    </div>
+    <button class="btn-share-cta" style="width:auto; padding:12px 22px;" onclick="openShareModal()">
+      📤 Share my forest
+    </button>
+  </div>
+
+  <!-- Forest scene -->
+  <div class="forest-scene" id="forestScene">
+    <div class="sun"></div>
+    <div class="cloud fc1"></div>
+    <div class="cloud fc2"></div>
+    <div class="fbird" style="top:18%; left:30%;"></div>
+    <div class="fbird" style="top:20%; left:34%;"></div>
+    <div class="ground"></div>
+    <div class="tree-layer" id="treeLayer"></div>
+    <div class="scene-overlay">
+      <div class="scene-overlay-num" id="overlayTreeCount">0</div>
+      <div class="scene-overlay-label">plants growing</div>
+    </div>
+    <div class="scene-empty-msg" id="emptyMsg">
+      <div class="scene-empty-emoji">🌱</div>
+      <div class="scene-empty-text">Your forest is waiting to grow</div>
+      <div class="scene-empty-sub">Save CO₂ on your Daily Tracker and come back — your first plant will appear here.</div>
+    </div>
+  </div>
+
+  <div class="growth-caption" id="growthCaption"></div>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-emoji">🌳</div>
+      <div class="stat-num" id="statTrees">0.0</div>
+      <div class="stat-unit">trees equivalent</div>
+      <div class="stat-label">Total planted so far</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">☁️</div>
+      <div class="stat-num" id="statCo2">0.0</div>
+      <div class="stat-unit">kg CO₂</div>
+      <div class="stat-label">Total saved vs avg Indian</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">🔥</div>
+      <div class="stat-num" id="statStreak">0</div>
+      <div class="stat-unit">days</div>
+      <div class="stat-label">Current streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">🍃</div>
+      <div class="stat-num" id="statOxygen">0</div>
+      <div class="stat-unit">days</div>
+      <div class="stat-label">Of breathable oxygen produced</div>
+    </div>
+  </div>
+
+  <!-- Tree legend -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🌿</div>
+      <div>
+        <div class="section-title">How your forest grows</div>
+        <div class="section-sub">Bigger daily savings grow bigger plants</div>
+      </div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-item"><span class="legend-dot" style="background:#A8D5BA;"></span> 0–1 kg saved → grass tuft</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#74C69D;"></span> 1–2.5 kg saved → sapling</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#40916C;"></span> 2.5–4 kg saved → bamboo</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#2D6A4F;"></span> 4+ kg saved → full tree</div>
+    </div>
+  </div>
+
+  <!-- Real life equivalents -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🌍</div>
+      <div>
+        <div class="section-title">What your forest really means</div>
+        <div class="section-sub">Your saved CO₂ translated into real life</div>
+      </div>
+    </div>
+    <div class="equiv-list" id="equivList">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+</div>
+
+<footer>🌿 Dharohar · Made with 🤍 in India 🇮🇳 · © 2026</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Share modal -->
+<div class="share-overlay" id="shareOverlay">
+  <div class="share-modal">
+    <div class="share-card" id="shareCardCanvas">
+      <button class="btn-share-close" onclick="closeShareModal()">✕</button>
+
+      <div class="share-card-top">
+        <div class="share-brand">
+          <svg class="share-brand-icon" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="#D8F3DC"/>
+            <path d="M18 28C18 28 10 22 10 16C10 11.6 13.6 8 18 8C22.4 8 26 11.6 26 16C26 22 18 28 18 28Z" fill="#2D6A4F"/>
+            <path d="M18 8C18 8 14 13 18 18C22 13 18 8 18 8Z" fill="#74C69D"/>
+          </svg>
+          <span class="share-brand-name">Dharohar</span>
+        </div>
+        <div class="share-headline" id="shareHeadline">I'm growing my own forest 🌳</div>
+        <div class="share-sub" id="shareSub">My carbon legacy, one day at a time</div>
+      </div>
+
+      <div class="share-card-trees" id="shareCardTrees"></div>
+
+      <div class="share-card-bottom">
+        <div>
+          <div class="share-stat-big" id="shareTreeNum">0</div>
+          <div class="share-stat-label">trees planted</div>
+        </div>
+        <div class="share-tag" id="shareCo2Tag">0 kg CO₂ saved</div>
+      </div>
+    </div>
+
+    <div class="share-link-row">
+      <input type="text" id="shareLinkBox" class="share-link-input" readonly value="" />
+      <button class="btn-copy-link" onclick="copyShareLink()" title="Copy link">🔗 Copy</button>
+    </div>
+    <div class="share-actions">
+      <button class="btn-share-action btn-share-secondary" onclick="downloadShareCard()">⬇️ Save image</button>
+      <button class="btn-share-action btn-share-primary" onclick="shareNative()">📤 Share now</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  // ── SUPABASE ─────────────────────────────────────────────────
+  const SUPABASE_URL  = 'https://yljfwnwrdsumaohbghnr.supabase.co'
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsamZ3bndyZHN1bWFvaGJnaG5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjAwODIsImV4cCI6MjA5Njg5NjA4Mn0.5hUMp4A59waDhR_yDDf9KP7AIMsJ83bWtWbaXKsb9Hs'
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  })
+
+  function sanitize(str) {
+    if (!str || typeof str !== 'string') return ''
+    return str.replace(/[<>"'`]/g, '').replace(/javascript:/gi, '').trim().slice(0, 100)
+  }
+
+  // ── AUTH GUARD ───────────────────────────────────────────────
+  // Matches the shared guard pattern: checks session exists, checks it
+  // hasn't expired, validates the user id shape, and signs out + redirects
+  // on any failure. Returns the user object only when all checks pass.
+  async function guardPage() {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error || !session?.user) { window.location.replace('index.html'); return null }
+
+    const expiresAt = session.expires_at * 1000
+    if (Date.now() >= expiresAt) {
+      await supabase.auth.signOut()
+      window.location.replace('index.html')
+      return null
+    }
+
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidPattern.test(session.user.id)) {
+      await supabase.auth.signOut()
+      window.location.replace('index.html')
+      return null
+    }
+
+    return session.user
+  }
+
+  // ── STATE (populated once the guard passes, inside init) ───────
+  let user = null
+  let userName = ''
+  let streak = 0
+  let totalSavedKg = 0
+  let totalTrees = 0
+  let plants = []
+
+  // ── DOM REFS ─────────────────────────────────────────────────
+  const treeLayer       = document.getElementById('treeLayer')
+  const emptyMsg        = document.getElementById('emptyMsg')
+  const captionEl       = document.getElementById('headerSub')
+  const growthCaptionEl = document.getElementById('growthCaption')
+
+  // ── DROPDOWN ─────────────────────────────────────────────────
+  window.toggleMenu = () => {
+    document.getElementById('menuBtn').classList.toggle('open')
+    document.getElementById('dropdown').classList.toggle('open')
+  }
+  document.addEventListener('click', e => {
+    const m = document.querySelector('.nav-menu')
+    if (m && !m.contains(e.target)) {
+      document.getElementById('menuBtn').classList.remove('open')
+      document.getElementById('dropdown').classList.remove('open')
+    }
+  })
+  window.handleSignOut = async () => {
+    await supabase.auth.signOut()
+    window.location.replace('index.html')
+  }
+
+  function animateNumber(id, target, decimals) {
+    const el = document.getElementById(id)
+    let current = 0
+    const steps = 40
+    const inc = target / steps
+    let i = 0
+    const timer = setInterval(() => {
+      current += inc
+      i++
+      if (i >= steps) { current = target; clearInterval(timer) }
+      el.textContent = current.toFixed(decimals)
+    }, 25)
+  }
+
+  // ── RENDER FOREST SCENE WITH ANIMATION ───────────────────────────
+  function treeSVG(type, seedIndex) {
+    // Slight randomised variation per tree using seedIndex
+    const wiggle = (seedIndex % 5) - 2
+    if (type === 'grass') {
+      return `<svg width="22" height="30" viewBox="0 0 22 30"><path d="M11 30 Q8 18 9 6 Q11 2 11 6 Q13 2 13 8 Q14 18 11 30Z" fill="#A8D5BA"/><path d="M11 30 Q5 20 6 10" stroke="#8BC9A5" stroke-width="2" fill="none"/></svg>`
+    }
+    if (type === 'sapling') {
+      return `<svg width="34" height="54" viewBox="0 0 34 54"><rect x="15" y="38" width="4" height="16" fill="#7a5230"/><ellipse cx="17" cy="28" rx="13" ry="16" fill="#74C69D"/><ellipse cx="11" cy="22" rx="7" ry="9" fill="#86D1A8"/></svg>`
+    }
+    if (type === 'bamboo') {
+      return `<svg width="30" height="74" viewBox="0 0 30 74"><rect x="13" y="10" width="5" height="64" rx="2" fill="#40916C"/><rect x="13" y="20" width="5" height="3" fill="#2D6A4F"/><rect x="13" y="36" width="5" height="3" fill="#2D6A4F"/><rect x="13" y="52" width="5" height="3" fill="#2D6A4F"/><path d="M16 14 Q26 10 28 2" stroke="#52B788" stroke-width="2" fill="none"/><path d="M16 30 Q4 26 2 18" stroke="#52B788" stroke-width="2" fill="none"/><path d="M16 46 Q26 42 27 34" stroke="#52B788" stroke-width="2" fill="none"/></svg>`
+    }
+    // full tree
+    return `<svg width="56" height="92" viewBox="0 0 56 92"><rect x="25" y="60" width="7" height="32" fill="#6b4423"/><ellipse cx="28" cy="36" rx="26" ry="30" fill="#2D6A4F"/><ellipse cx="16" cy="28" rx="14" ry="17" fill="#40916C"/><ellipse cx="40" cy="30" rx="13" ry="15" fill="#40916C"/><ellipse cx="28" cy="18" rx="15" ry="14" fill="#52B788"/></svg>`
+  }
+
+  function renderForest() {
+    if (plants.length === 0) {
+      emptyMsg.classList.remove('hidden')
+      return
+    }
+    emptyMsg.classList.add('hidden')
+
+    // Position plants across the ground, avoiding exact overlap using deterministic pseudo-random spread
+    const positions = []
+    const count = plants.length
+    const usableWidth = 92 // percent
+    const startOffset = 4
+
+    for (let i = 0; i < count; i++) {
+      const baseX = startOffset + (usableWidth / Math.max(count,1)) * i
+      const jitter = ((i * 37) % 7) - 3 // deterministic jitter
+      positions.push(Math.min(96, Math.max(2, baseX + jitter)))
+    }
+
+    plants.forEach((plant, i) => {
+      const sprite = document.createElement('div')
+      sprite.className = 'tree-sprite'
+      sprite.style.left = `${positions[i]}%`
+      sprite.style.zIndex = String(10 + i)
+      sprite.innerHTML = treeSVG(plant.type, i)
+      treeLayer.appendChild(sprite)
+    })
+
+    // Animate them growing in one by one
+    const sprites = treeLayer.querySelectorAll('.tree-sprite')
+    sprites.forEach((sprite, i) => {
+      setTimeout(() => {
+        sprite.classList.add('grown')
+        setTimeout(() => sprite.classList.add('swaying'), 600)
+        growthCaptionEl.innerHTML = `Growing plant <strong>${i+1}</strong> of <strong>${sprites.length}</strong>...`
+        if (i === sprites.length - 1) {
+          setTimeout(() => {
+            growthCaptionEl.innerHTML = `🌳 Your forest of <strong>${sprites.length}</strong> plants, grown one mindful day at a time.`
+          }, 700)
+        }
+      }, i * 180)
+    })
+
+    // Add a few sparkles for magic feel
+    for (let s = 0; s < 8; s++) {
+      const sp = document.createElement('div')
+      sp.className = 'sparkle'
+      sp.style.left = `${Math.random()*90+5}%`
+      sp.style.bottom = `${Math.random()*100+40}px`
+      sp.style.animationDelay = `${Math.random()*3}s`
+      document.getElementById('forestScene').appendChild(sp)
+    }
+  }
+
+  // ── SHARE MODAL ──────────────────────────────────────────────────
+  function buildShareLink() {
+    // Encode forest stats into URL params so anyone can view a public snapshot
+    // without needing to log in — works as a "card preview" link
+    const params = new URLSearchParams({
+      name: userName,
+      trees: totalTrees.toFixed(1),
+      co2: totalSavedKg.toFixed(1),
+      plants: plants.length,
+      streak: streak
+    })
+    return `${window.location.origin}/forest-view.html?${params.toString()}`
+  }
+
+  window.openShareModal = () => {
+    document.getElementById('shareTreeNum').textContent = totalTrees.toFixed(1)
+    document.getElementById('shareCo2Tag').textContent = `${totalSavedKg.toFixed(1)} kg CO₂ saved`
+    document.getElementById('shareHeadline').textContent =
+      plants.length > 0 ? `I'm growing my own forest 🌳` : `I just started my carbon journey 🌱`
+    document.getElementById('shareSub').textContent =
+      `${plants.length} plant${plants.length===1?'':'s'} grown · ${streak} day streak`
+
+    // mini trees in share card
+    const shareTrees = document.getElementById('shareCardTrees')
+    shareTrees.innerHTML = ''
+    const miniCount = Math.min(plants.length, 6)
+    for (let i = 0; i < miniCount; i++) {
+      const p = plants[plants.length - 1 - i] || { type: 'sapling' }
+      const div = document.createElement('div')
+      div.style.position = 'absolute'
+      div.style.bottom = '0'
+      div.style.left = `${10 + i * (80/Math.max(miniCount-1,1))}%`
+      div.style.transform = 'scale(0.85)'
+      div.innerHTML = treeSVG(p.type, i)
+      shareTrees.appendChild(div)
+    }
+    if (miniCount === 0) {
+      shareTrees.innerHTML = `<div style="position:absolute;bottom:0;left:40%;">${treeSVG('grass',0)}</div>`
+    }
+
+    // Show the link in the modal
+    const link = buildShareLink()
+    const linkBox = document.getElementById('shareLinkBox')
+    if (linkBox) linkBox.value = link
+
+    document.getElementById('shareOverlay').classList.add('active')
+  }
+  window.closeShareModal = () => document.getElementById('shareOverlay').classList.remove('active')
+
+  window.shareNative = async () => {
+    const link = buildShareLink()
+    const text = `I'm growing my own forest on Dharohar 🌳 — ${totalTrees.toFixed(1)} trees planted and ${totalSavedKg.toFixed(1)} kg CO₂ saved by tracking my daily carbon footprint. Join me!\n\nSee my forest: ${link}`
+    if (navigator.share) {
+      try { await navigator.share({ title: 'My Dharohar Forest', text, url: link }) }
+      catch (e) { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(text)
+      showToast('Copied to clipboard — paste it anywhere! 📋')
+    }
+  }
+
+  window.copyShareLink = async () => {
+    const link = buildShareLink()
+    try {
+      await navigator.clipboard.writeText(link)
+      showToast('Link copied! 🔗 Paste it anywhere to show your forest')
+    } catch (e) {
+      // Fallback for older browsers
+      const box = document.getElementById('shareLinkBox')
+      if (box) { box.select(); document.execCommand('copy'); showToast('Link copied! 🔗') }
+    }
+  }
+
+  window.downloadShareCard = () => {
+    showToast('Tip: use your device screenshot to save this card 📸')
+  }
+
+  // ── TOAST ────────────────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast')
+    t.textContent = sanitize(msg)
+    t.classList.add('show')
+    setTimeout(() => t.classList.remove('show'), 3000)
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────
+  async function init() {
+    const authedUser = await guardPage()
+    if (!authedUser) return // guard already redirected — stop here, fetch nothing
+
+    user = authedUser
+    userName = sanitize(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Friend').split(' ')[0]
+    document.getElementById('navUser').textContent = userName
+
+    // ── FETCH PROFILE + DAILY LOGS ────────────────────────────────
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('current_streak, total_co2_saved_kg, total_trees_planted')
+      .eq('id', user.id)
+      .single()
+
+    const { data: dailyLogs } = await supabase
+      .from('daily_logs')
+      .select('date, total_co2_kg, vs_avg_indian')
+      .eq('user_id', user.id)
+      .order('date', { ascending: true })
+
+    document.getElementById('loadingScreen').classList.add('hidden')
+
+    streak       = profile?.current_streak || 0
+    totalSavedKg = Math.max(0, profile?.total_co2_saved_kg || 0)
+    totalTrees   = profile?.total_trees_planted || (totalSavedKg * 0.045)
+
+    document.getElementById('navStreak').textContent = `🔥 ${streak} day streak`
+
+    // ── BUILD TREE LIST FROM DAILY LOGS ───────────────────────────
+    // Each day where user saved CO₂ (vs_avg_indian < 0) grows ONE plant
+    // Plant size depends on how much was saved that day
+    const savingDays = (dailyLogs || []).filter(d => d.vs_avg_indian < 0)
+    plants = savingDays.map(d => {
+      const saved = Math.abs(d.vs_avg_indian)
+      let type = 'grass'
+      if (saved >= 4)   type = 'tree'
+      else if (saved >= 2.5) type = 'bamboo'
+      else if (saved >= 1)   type = 'sapling'
+      return { date: d.date, saved, type }
+    })
+
+    // ── UPDATE STATS ───────────────────────────────────────────────
+    animateNumber('statTrees', totalTrees, 1)
+    animateNumber('statCo2', totalSavedKg, 1)
+    animateNumber('statStreak', streak, 0)
+
+    // ── OXYGEN CALCULATION (real science) ───────────────────────────
+    // Photosynthesis releases ~0.727 kg O2 per kg of CO2 absorbed
+    // (based on molecular weight ratio: O2 = 32g/mol, CO2 = 44g/mol)
+    // A person needs ~0.84 kg of oxygen per day to breathe
+    const oxygenProducedKg = totalSavedKg * 0.727
+    const daysOfOxygen     = oxygenProducedKg / 0.84
+    animateNumber('statOxygen', daysOfOxygen, 1)
+
+    document.getElementById('overlayTreeCount').textContent = plants.length
+
+    // ── REAL LIFE EQUIVALENTS ───────────────────────────────────────
+    const equivalents = [
+      { emoji:'📱', text: `Your saved CO₂ equals <strong>${Math.round(totalSavedKg*129)}</strong> full phone charges never burned from the grid.` },
+      { emoji:'🛺', text: `That's like avoiding <strong>${Math.round(totalSavedKg/0.09)} km</strong> of auto-rickshaw travel.` },
+      { emoji:'🌳', text: `Real trees absorb about 22 kg CO₂ per year — your savings equal <strong>${(totalSavedKg/22).toFixed(2)} years</strong> of one tree's work.` },
+      { emoji:'💡', text: `Enough saved energy to run an LED bulb for <strong>${Math.round(totalSavedKg*100)} hours</strong> straight.` },
+      { emoji:'🏭', text: `You've personally avoided the emissions of about <strong>${(totalSavedKg/1000).toFixed(3)} tonnes</strong> — every gram adds up.` }
+    ]
+    const equivList = document.getElementById('equivList')
+    equivList.innerHTML = equivalents.map(e => `
+      <div class="equiv-item">
+        <div class="equiv-emoji">${e.emoji}</div>
+        <div class="equiv-text">${e.text}</div>
+      </div>`).join('')
+
+    // ── GROWTH CAPTION ───────────────────────────────────────────────
+    if (plants.length === 0) {
+      captionEl.textContent = 'Your forest is empty — start saving CO₂ to plant your first sapling'
+    } else {
+      captionEl.textContent = `You've grown ${plants.length} plant${plants.length>1?'s':''} by saving CO₂ below the average Indian`
+    }
+
+    renderForest()
+  }
+
+  init()
+</script>
+</body>
+</html>

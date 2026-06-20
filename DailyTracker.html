@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-Frame-Options" content="DENY"/>
+  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+  <meta name="description" content="Dharohar Daily Tracker — Track your daily carbon footprint across travel, home energy, and food. Made for India."/>
+  <title>Dharohar — Daily Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --forest:      #2D6A4F;
+      --forest-mid:  #40916C;
+      --leaf:        #74C69D;
+      --leaf-light:  #D8F3DC;
+      --sky:         #E8F4FD;
+      --earth:       #1B3A2D;
+      --cream:       #F7FBFF;
+      --text:        #1a2e22;
+      --muted:       #5a7a6a;
+      --border:      #e0ece6;
+      --white:       #ffffff;
+      --danger:      #c0392b;
+      --danger-bg:   #fff0f0;
+      --warn:        #e67e22;
+      --warn-bg:     #fff8f0;
+    }
+    html, body { min-height: 100%; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--text); }
+
+    /* ── NAV ── */
+    nav {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; }
+    .logo-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--forest); }
+    .logo-sub  { font-size: 0.6rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user  { font-size: 0.82rem; color: var(--muted); }
+    .nav-streak { background: var(--leaf-light); color: var(--forest); border-radius: 100px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; }
+
+    /* dropdown */
+    .nav-menu { position: relative; }
+    .nav-menu-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.75); backdrop-filter: blur(10px);
+      border: 1px solid rgba(45,106,79,0.18); border-radius: 100px;
+      padding: 7px 14px; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600; color: var(--forest); cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-menu-btn:hover { background: white; }
+    .nav-menu-btn .chevron { width: 14px; height: 14px; transition: transform 0.2s; }
+    .nav-menu-btn.open .chevron { transform: rotate(180deg); }
+    .dropdown {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+      border: 1px solid rgba(45,106,79,0.12); border-radius: 16px;
+      padding: 8px; min-width: 200px;
+      box-shadow: 0 12px 40px rgba(27,58,45,0.14); z-index: 200;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      text-decoration: none; font-size: 0.85rem; font-weight: 500; color: var(--text);
+      transition: background 0.15s;
+    }
+    .dropdown a:hover, .dropdown a.active { background: var(--leaf-light); color: var(--forest); }
+    .btn-signout {
+      width: 100%; margin-top: 6px; padding: 9px;
+      background: transparent; border: 1px solid #ffd0d0;
+      border-radius: 10px; color: var(--danger); font-size: 0.82rem;
+      font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-signout:hover { background: var(--danger-bg); }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* ── TOP BAR ── */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+    }
+    .top-greeting { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--earth); }
+    .top-date { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+    .live-total-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 100px; padding: 10px 20px;
+      transition: border-color 0.3s, box-shadow 0.2s, transform 0.15s;
+      cursor: pointer; user-select: none;
+    }
+    .live-total-pill:hover { box-shadow: 0 4px 16px rgba(45,106,79,0.13); transform: translateY(-1px); }
+    .live-total-pill:active { transform: translateY(0); }
+    .live-total-pill.green { border-color: var(--leaf); }
+    .live-total-pill.red   { border-color: #ffaaaa; }
+    .live-num { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--earth); }
+    .live-label { font-size: 0.72rem; color: var(--muted); line-height: 1.3; }
+    .live-status { font-size: 0.65rem; font-weight: 600; margin-top: 2px; }
+    .live-status.below { color: var(--forest); }
+    .live-status.above { color: var(--danger); }
+
+    /* ── SECTION ── */
+    .section {
+      background: white; border: 1px solid var(--border);
+      border-radius: 18px; padding: 24px; margin-bottom: 18px;
+    }
+    .section-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--leaf-light); display: flex; align-items: center;
+      justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+      align-self: center;
+    }
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--earth); line-height: 1.2; }
+    .section-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── TRAVEL TILES ── */
+    .mode-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px;
+      margin-bottom: 18px;
+    }
+    .mode-tile {
+      border: 1.5px solid var(--border); border-radius: 14px;
+      padding: 12px 6px; text-align: center; cursor: pointer;
+      transition: all 0.18s; background: white;
+    }
+    .mode-tile:hover { border-color: var(--leaf); background: var(--leaf-light); }
+    .mode-tile.selected { border-color: var(--forest); background: var(--leaf-light); }
+    .mode-tile .tile-icon { font-size: 1.5rem; margin-bottom: 4px; }
+    .mode-tile .tile-name { font-size: 0.72rem; font-weight: 600; color: var(--text); }
+    .mode-tile .tile-co2  { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+    /* trip input */
+    .trip-input-box {
+      display: none; background: var(--leaf-light);
+      border-radius: 14px; padding: 18px; margin-bottom: 14px;
+      animation: slideDown 0.2s ease;
+    }
+    .trip-input-box.visible { display: block; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+    .trip-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .trip-input {
+      flex: 1; min-width: 140px; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem; background: white;
+      outline: none; transition: border-color 0.2s;
+    }
+    .trip-input:focus { border-color: var(--forest); }
+    .trip-arrow { color: var(--muted); font-size: 1.1rem; }
+
+    .trip-result {
+      display: none; background: white; border-radius: 10px;
+      padding: 12px 16px; font-size: 0.85rem; color: var(--forest);
+      border: 1px solid var(--leaf); margin-bottom: 10px;
+    }
+    .trip-result.visible { display: block; }
+
+    .btn-add-trip {
+      padding: 10px 20px; background: var(--forest); color: white;
+      border: none; border-radius: 10px; font-family: 'Inter', sans-serif;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s; margin-right: 8px;
+    }
+    .btn-add-trip:hover { background: var(--forest-mid); }
+    .btn-add-trip:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-cancel-trip {
+      padding: 10px 16px; background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 10px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem; cursor: pointer;
+    }
+
+    /* Manual distance fallback */
+    .manual-dist-box {
+      display: none; margin-top: 12px; padding: 12px;
+      background: #fff8f0; border: 1px solid var(--warn);
+      border-radius: 10px;
+    }
+    .manual-dist-box.visible { display: block; }
+    .manual-dist-input {
+      width: 120px; padding: 8px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'Inter', sans-serif; font-size: 0.85rem;
+    }
+    .manual-dist-btn {
+      padding: 8px 16px; background: var(--warn); color: white;
+      border: none; border-radius: 8px; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer; margin-left: 8px;
+    }
+
+    /* trips logged list */
+    .trips-list { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .trip-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--cream); border-radius: 10px; padding: 10px 14px;
+      font-size: 0.85rem;
+    }
+    .trip-item-left { display: flex; align-items: center; gap: 10px; }
+    .trip-item-co2  { font-weight: 600; color: var(--forest); }
+    .trip-item-del  { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+    .trip-item-del:hover { color: var(--danger); }
+
+    /* ── AUTOCOMPLETE ── */
+    .autocomplete-wrap { position: relative; flex: 1; min-width: 140px; }
+    .autocomplete-list {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: white; border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      z-index: 999; max-height: 240px; overflow-y: auto;
+      margin-top: 4px;
+    }
+    .autocomplete-item {
+      padding: 11px 14px; font-size: 0.83rem; cursor: pointer;
+      border-bottom: 1px solid var(--border); color: var(--text);
+      transition: background 0.15s; display: flex; align-items: flex-start; gap: 10px;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--leaf-light); color: var(--forest); }
+    .autocomplete-item .place-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .autocomplete-item .place-info { flex: 1; min-width: 0; }
+    .autocomplete-item .place-main { font-weight: 600; }
+    .autocomplete-item .place-main mark { background: #c7f0d8; color: var(--forest); border-radius: 2px; padding: 0 2px; font-weight: 700; }
+    .autocomplete-item .place-sub  { font-size: 0.73rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* search spinner inside input */
+    .autocomplete-wrap .search-spinner {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      width: 14px; height: 14px; border: 2px solid var(--border);
+      border-top-color: var(--forest); border-radius: 50%;
+      animation: spin 0.7s linear infinite; display: none; pointer-events: none;
+    }
+    .autocomplete-wrap.loading .search-spinner { display: block; }
+    .autocomplete-no-result {
+      padding: 12px 14px; font-size: 0.82rem; color: var(--muted); text-align: center;
+    }
+
+    /* ── HOME ENERGY SLIDERS ── */
+    .energy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 520px) { .energy-grid { grid-template-columns: 1fr; } }
+
+    .energy-item {
+      background: var(--cream); border-radius: 12px; padding: 14px 16px;
+    }
+    .energy-label {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .energy-name  { font-size: 0.85rem; font-weight: 600; color: var(--earth); }
+    .energy-val   { font-size: 0.82rem; color: var(--forest); font-weight: 600; }
+    .energy-co2   { font-size: 0.7rem; color: var(--muted); margin-bottom: 6px; }
+    input[type=range] {
+      width: 100%; accent-color: var(--forest); height: 4px; cursor: pointer;
+    }
+    .slider-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .slider-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid var(--border); background: white;
+      color: var(--forest); font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .slider-btn:hover { background: var(--leaf-light); }
+    .slider-btn:active { transform: scale(0.95); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+    .toggle { position: relative; width: 44px; height: 24px; cursor: pointer; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: #ccc; border-radius: 24px;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; width: 18px; height: 18px;
+      background: white; border-radius: 50%; left: 3px; top: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--forest); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* Warning for extreme values */
+    .energy-warning {
+      font-size: 0.72rem; color: var(--warn); margin-top: 6px;
+      display: none; align-items: center; gap: 4px;
+    }
+    .energy-warning.visible { display: flex; }
+
+    /* ── IMPACT CARDS ── */
+    .impact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .impact-card {
+      background: var(--leaf-light); border-radius: 14px;
+      padding: 16px 14px; text-align: center;
+    }
+    .impact-card.red-card { background: #fff0f0; }
+    .impact-num   { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--earth); }
+    .impact-unit  { font-size: 0.7rem; color: var(--muted); }
+    .impact-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+    .impact-emoji { font-size: 1.4rem; margin-bottom: 6px; }
+
+    /* vs avg bar */
+    .vs-bar-wrap { margin-top: 18px; }
+    .vs-bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+    .vs-bar-track { height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; position: relative; }
+    .vs-bar-avg   { position: absolute; top: 0; bottom: 0; width: 2px; background: #888; left: 100%; transition: left 0.4s; }
+    .vs-bar-fill  { height: 100%; border-radius: 10px; background: var(--forest); transition: width 0.4s, background 0.4s; width: 0%; }
+    .vs-bar-note  { font-size: 0.75rem; color: var(--muted); margin-top: 6px; text-align: center; }
+
+    /* ── SUBMIT ── */
+    .btn-save {
+      width: 100%; padding: 16px; background: var(--forest); color: white;
+      border: none; border-radius: 14px; font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 6px;
+      transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(45,106,79,0.25);
+    }
+    .btn-save:hover { background: var(--forest-mid); transform: translateY(-1px); }
+    .btn-save:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+    .save-note { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 10px; }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--earth); color: white; border-radius: 100px;
+      padding: 12px 24px; font-size: 0.88rem; font-weight: 500;
+      transition: transform 0.3s; z-index: 999; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* loading screen */
+    .loading-screen {
+      position: fixed; inset: 0; background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px; z-index: 500;
+    }
+    .loading-screen.hidden { display: none; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--forest); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FOOD SECTION ── */
+    .food-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .food-tile {
+      border: 1.5px solid var(--border); border-radius: 14px;
+      padding: 12px 8px; text-align: center; cursor: pointer;
+      transition: all 0.18s; background: white; position: relative;
+    }
+    .food-tile:hover { border-color: var(--leaf); background: var(--leaf-light); }
+    .food-tile .food-icon { font-size: 1.6rem; margin-bottom: 4px; }
+    .food-tile .food-name { font-size: 0.72rem; font-weight: 600; color: var(--text); }
+    .food-tile .food-co2  { font-size: 0.63rem; color: var(--muted); margin-top: 2px; }
+    .food-tile .food-count {
+      position: absolute; top: -6px; right: -6px;
+      background: var(--forest); color: white;
+      border-radius: 50%; width: 20px; height: 20px;
+      font-size: 0.7rem; font-weight: 700;
+      display: none; align-items: center; justify-content: center;
+    }
+    .food-tile.has-count .food-count { display: flex; }
+    .food-tile.has-count { border-color: var(--forest); background: var(--leaf-light); }
+    .food-log-list { margin-top: 4px; display: flex; flex-direction: column; gap: 8px; }
+    .food-log-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--cream); border-radius: 10px; padding: 10px 14px; font-size: 0.85rem;
+    }
+    .food-log-left { display: flex; align-items: center; gap: 10px; }
+    .food-log-co2  { font-weight: 600; color: var(--forest); }
+    .food-log-del  { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+    .food-log-del:hover { color: var(--danger); }
+    .food-total { font-size: 0.82rem; color: var(--muted); margin-top: 14px; text-align: right; }
+    .food-tip {
+      margin-top: 14px; background: #f0fdf4; border: 1px solid var(--leaf);
+      border-radius: 10px; padding: 10px 14px; font-size: 0.78rem; color: var(--forest);
+      display: none;
+    }
+    .food-tip.visible { display: block; }
+
+    /* Delete confirmation modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal-box {
+      background: white; border-radius: 16px; padding: 24px;
+      max-width: 320px; width: 90%; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--earth); margin-bottom: 8px; }
+    .modal-text { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 10px; }
+    .modal-btn {
+      flex: 1; padding: 10px; border-radius: 10px; font-family: 'Inter', sans-serif;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
+    }
+    .modal-btn.cancel { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
+    .modal-btn.confirm { background: var(--danger); color: white; }
+    .modal-btn:hover { opacity: 0.9; }
+
+    /* footer */
+    footer { text-align: center; padding: 20px; font-size: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div style="font-size:0.88rem; color:var(--muted);">Loading your tracker...</div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">Remove item?</div>
+    <div class="modal-text" id="modalText">This action cannot be undone.</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm" id="modalConfirm" onclick="confirmDelete()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="logo">
+    <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="18" fill="#D8F3DC"/>
+      <path d="M18 28C18 28 10 22 10 16C10 11.6 13.6 8 18 8C22.4 8 26 11.6 26 16C26 22 18 28 18 28Z" fill="#2D6A4F"/>
+      <path d="M18 8C18 8 14 13 18 18C22 13 18 8 18 8Z" fill="#74C69D"/>
+      <rect x="17" y="22" width="2" height="6" rx="1" fill="#40916C"/>
+    </svg>
+    <div>
+      <div class="logo-text">Dharohar</div>
+      <div class="logo-sub">Your Carbon Legacy</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-streak" id="navStreak">🔥 0 day streak</span>
+    <span class="nav-user" id="navUser"></span>
+    <div class="nav-menu">
+      <button class="nav-menu-btn" id="menuBtn" onclick="toggleMenu()" aria-label="Open navigation menu">
+        Pages
+        <svg class="chevron" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="dropdown" id="dropdown">
+        <a href="index.html">🏠 Home</a>
+        <a href="dashboard.html" class="active">📍 Daily Tracker</a>
+        <a href="report.html">📊 My Report</a>
+        <a href="suggestions.html">💡 AI Suggestions</a>
+        <a href="forest.html">🌳 My Forest</a>
+        <button class="btn-signout" onclick="handleSignOut()">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Main page -->
+<div class="page">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div>
+      <div class="top-greeting" id="topGreeting">Namaste! 🙏</div>
+      <div class="top-date" id="topDate"></div>
+    </div>
+    <div class="live-total-pill" id="livePill" onclick="document.getElementById('impactSection').scrollIntoView({behavior:'smooth',block:'start'})" role="button" tabindex="0" aria-label="View today's carbon impact summary">
+      <div>
+        <div class="live-num" id="liveNum">0.0 kg</div>
+        <div class="live-label">CO₂ today<br/>tap to see impact ↓</div>
+        <div class="live-status" id="liveStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 1: TRAVEL ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🚗</div>
+      <div>
+        <div class="section-title">Travel</div>
+        <div class="section-sub">Select your mode, then enter your route</div>
+        <div style="margin-top:4px; font-size:0.72rem; color:var(--muted); background:var(--leaf-light); border-radius:6px; padding:4px 8px; display:inline-block;">ℹ️ CO₂ values are average estimates per km for each mode</div>
+      </div>
+    </div>
+
+    <!-- Mode tiles -->
+    <div class="mode-grid">
+      <div class="mode-tile" data-mode="ola" onclick="selectMode(this)" role="button" tabindex="0" aria-label="Ola or Uber ride">
+        <div class="tile-icon">🚗</div>
+        <div class="tile-name">Ola/Uber</div>
+        <div class="tile-co2">0.16 kg/km</div>
+      </div>
+      <div class="mode-tile" data-mode="auto" onclick="selectMode(this)" role="button" tabindex="0" aria-label="Auto rickshaw">
+        <div class="tile-icon">🛺</div>
+        <div class="tile-name">Auto</div>
+        <div class="tile-co2">0.09 kg/km</div>
+      </div>
+      <div class="mode-tile" data-mode="bus" onclick="selectMode(this)" role="button" tabindex="0" aria-label="Bus ride">
+        <div class="tile-icon">🚌</div>
+        <div class="tile-name">Bus</div>
+        <div class="tile-co2">0.008 kg/km</div>
+      </div>
+      <div class="mode-tile" data-mode="metro" onclick="selectMode(this)" role="button" tabindex="0" aria-label="Metro train">
+        <div class="tile-icon">🚇</div>
+        <div class="tile-name">Metro</div>
+        <div class="tile-co2">0.004 kg/km</div>
+      </div>
+      <div class="mode-tile" data-mode="train" onclick="selectMode(this)" role="button" tabindex="0" aria-label="Train journey">
+        <div class="tile-icon">🚆</div>
+        <div class="tile-name">Train</div>
+        <div class="tile-co2">0.003 kg/km</div>
+      </div>
+      <div class="mode-tile" data-mode="flight" onclick="selectMode(this)" role="button" tabindex="0" aria-label="Flight">
+        <div class="tile-icon">✈️</div>
+        <div class="tile-name">Flight</div>
+        <div class="tile-co2">0.255 kg/km</div>
+      </div>
+      <div class="mode-tile" data-mode="walk" onclick="selectMode(this)" role="button" tabindex="0" aria-label="Walk or cycle">
+        <div class="tile-icon">🚶</div>
+        <div class="tile-name">Walk/Cycle</div>
+        <div class="tile-co2">0 kg ✅</div>
+      </div>
+    </div>
+
+    <!-- Trip input -->
+    <div class="trip-input-box" id="tripInputBox">
+      <div class="trip-row">
+        <div class="autocomplete-wrap">
+          <input class="trip-input" id="fromPlace" placeholder="From — type 'patna junc'…" autocomplete="off" aria-label="Starting location" oninput="searchPlace(this, 'fromList')" onblur="hideList('fromList')" onkeydown="handleKey(event,'fromList')"/>
+          <div class="autocomplete-list" id="fromList" style="display:none;"></div>
+          <div class="search-spinner"></div>
+        </div>
+        <span class="trip-arrow">→</span>
+        <div class="autocomplete-wrap">
+          <input class="trip-input" id="toPlace" placeholder="To — type 'boring rd'…" autocomplete="off" aria-label="Destination" oninput="searchPlace(this, 'toList')" onblur="hideList('toList')" onkeydown="handleKey(event,'toList')"/>
+          <div class="autocomplete-list" id="toList" style="display:none;"></div>
+          <div class="search-spinner"></div>
+        </div>
+      </div>
+      <div class="trip-result" id="tripResult"></div>
+      <div class="manual-dist-box" id="manualDistBox">
+        <span style="font-size:0.82rem; color:var(--muted);">Couldn't auto-calculate. Enter distance manually:</span>
+        <div style="margin-top:8px;">
+          <input type="number" class="manual-dist-input" id="manualDistInput" placeholder="km" min="0.1" step="0.1" aria-label="Distance in kilometers"/>
+          <button class="manual-dist-btn" onclick="useManualDistance()">Use this distance</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-cancel-trip" onclick="cancelTrip()">Cancel</button>
+        <button class="btn-add-trip" id="calcBtn" onclick="calculateTrip()">Calculate distance & CO₂</button>
+        <button class="btn-add-trip" id="addTripBtn" onclick="addTrip()" style="display:none;">Add this trip ✓</button>
+      </div>
+    </div>
+
+    <!-- Logged trips -->
+    <div class="trips-list" id="tripsList"></div>
+    <div id="travelTotal" style="font-size:0.82rem; color:var(--muted); margin-top:10px;"></div>
+  </div>
+
+  <!-- ── SECTION 2: HOME ENERGY ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🏠</div>
+      <div>
+        <div class="section-title">Home energy</div>
+        <div class="section-sub">Adjust sliders for today's usage</div>
+        <div style="margin-top:4px; font-size:0.72rem; color:var(--muted); background:var(--leaf-light); border-radius:6px; padding:4px 8px; display:inline-block;">ℹ️ CO₂ values are average estimates based on typical Indian appliance usage</div>
+      </div>
+    </div>
+
+    <div class="energy-grid">
+
+      <!-- AC -->
+      <div class="energy-item">
+        <div class="energy-label">
+          <span class="energy-name">❄️ Air conditioner</span>
+          <span class="energy-val" id="acHoursVal">0 hrs</span>
+        </div>
+        <div class="energy-co2" id="acCo2">0.00 kg CO₂</div>
+        <div class="slider-controls">
+          <button class="slider-btn" onclick="adjustSlider('acHours', -0.5)" aria-label="Decrease AC hours">−</button>
+          <input type="range" min="0" max="16" step="0.5" value="0" id="acHours" oninput="updateEnergy()" aria-label="Air conditioner hours"/>
+          <button class="slider-btn" onclick="adjustSlider('acHours', 0.5)" aria-label="Increase AC hours">+</button>
+        </div>
+        <div class="energy-label" style="margin-top:10px;">
+          <span class="energy-name" style="font-size:0.78rem;">Temp set to</span>
+          <span class="energy-val" id="acTempVal">24°C</span>
+        </div>
+        <div class="slider-controls">
+          <button class="slider-btn" onclick="adjustSlider('acTemp', -1)" aria-label="Decrease AC temperature">−</button>
+          <input type="range" min="16" max="30" step="1" value="24" id="acTemp" oninput="updateEnergy()" aria-label="Air conditioner temperature"/>
+          <button class="slider-btn" onclick="adjustSlider('acTemp', 1)" aria-label="Increase AC temperature">+</button>
+        </div>
+        <div class="energy-warning" id="acWarning">
+          <span>⚠️</span> High AC usage. Consider using fans to save energy.
+        </div>
+      </div>
+
+      <!-- Geyser -->
+      <div class="energy-item">
+        <div class="energy-label">
+          <span class="energy-name">🚿 Geyser</span>
+          <span class="energy-val" id="geyserVal">0 hrs</span>
+        </div>
+        <div class="energy-co2" id="geyserCo2">0.00 kg CO₂</div>
+        <div class="slider-controls">
+          <button class="slider-btn" onclick="adjustSlider('geyserHours', -0.25)" aria-label="Decrease geyser hours">−</button>
+          <input type="range" min="0" max="4" step="0.25" value="0" id="geyserHours" oninput="updateEnergy()" aria-label="Geyser hours"/>
+          <button class="slider-btn" onclick="adjustSlider('geyserHours', 0.25)" aria-label="Increase geyser hours">+</button>
+        </div>
+        <div class="energy-warning" id="geyserWarning">
+          <span>⚠️</span> Very high geyser usage. Consider solar water heater.
+        </div>
+      </div>
+
+      <!-- TV -->
+      <div class="energy-item">
+        <div class="energy-label">
+          <span class="energy-name">📺 Television</span>
+          <span class="energy-val" id="tvVal">0 hrs</span>
+        </div>
+        <div class="energy-co2" id="tvCo2">0.00 kg CO₂</div>
+        <div class="slider-controls">
+          <button class="slider-btn" onclick="adjustSlider('tvHours', -0.5)" aria-label="Decrease TV hours">−</button>
+          <input type="range" min="0" max="12" step="0.5" value="0" id="tvHours" oninput="updateEnergy()" aria-label="Television hours"/>
+          <button class="slider-btn" onclick="adjustSlider('tvHours', 0.5)" aria-label="Increase TV hours">+</button>
+        </div>
+      </div>
+
+      <!-- Fan -->
+      <div class="energy-item">
+        <div class="energy-label">
+          <span class="energy-name">🌀 Ceiling fan</span>
+          <span class="energy-val" id="fanVal">0 hrs</span>
+        </div>
+        <div class="energy-co2" id="fanCo2">0.00 kg CO₂</div>
+        <div class="slider-controls">
+          <button class="slider-btn" onclick="adjustSlider('fanHours', -0.5)" aria-label="Decrease fan hours">−</button>
+          <input type="range" min="0" max="24" step="0.5" value="0" id="fanHours" oninput="updateEnergy()" aria-label="Ceiling fan hours"/>
+          <button class="slider-btn" onclick="adjustSlider('fanHours', 0.5)" aria-label="Increase fan hours">+</button>
+        </div>
+      </div>
+
+      <!-- Gas stove -->
+      <div class="energy-item">
+        <div class="energy-label">
+          <span class="energy-name">🍳 Gas stove</span>
+          <span class="energy-val" id="gasVal">0 hrs</span>
+        </div>
+        <div class="energy-co2" id="gasCo2">0.00 kg CO₂</div>
+        <div class="slider-controls">
+          <button class="slider-btn" onclick="adjustSlider('gasHours', -0.25)" aria-label="Decrease gas stove hours">−</button>
+          <input type="range" min="0" max="6" step="0.25" value="0" id="gasHours" oninput="updateEnergy()" aria-label="Gas stove hours"/>
+          <button class="slider-btn" onclick="adjustSlider('gasHours', 0.25)" aria-label="Increase gas stove hours">+</button>
+        </div>
+        <div class="energy-warning" id="gasWarning">
+          <span>⚠️</span> Very high gas usage. Check for leaks or inefficient burner.
+        </div>
+      </div>
+
+      <!-- Washing machine -->
+      <div class="energy-item">
+        <div class="energy-label">
+          <span class="energy-name">👕 Washing machine</span>
+          <span class="energy-val" id="washVal">Off</span>
+        </div>
+        <div class="energy-co2" id="washCo2">0.00 kg CO₂</div>
+        <div class="toggle-row" style="margin-top:10px;">
+          <span style="font-size:0.78rem; color:var(--muted);">Used today?</span>
+          <label class="toggle" aria-label="Toggle washing machine usage">
+            <input type="checkbox" id="washingMachine" onchange="updateEnergy()"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+    <div id="energyTotal" style="font-size:0.82rem; color:var(--muted); margin-top:14px; text-align:right;"></div>
+  </div>
+
+  <!-- ── SECTION 3: FOOD ── -->
+  <div class="section" id="foodSection">
+    <div class="section-header">
+      <div class="section-icon">🍽️</div>
+      <div>
+        <div class="section-title">Food & drinks</div>
+        <div class="section-sub">What you eat matters more than you think</div>
+        <div style="margin-top:4px; font-size:0.72rem; color:var(--muted); background:var(--leaf-light); border-radius:6px; padding:4px 8px; display:inline-block;">ℹ️ CO₂ values are average estimates per serving — actual emissions may vary by source & preparation</div>
+      </div>
+    </div>
+
+    <div class="food-grid">
+      <div class="food-tile" id="ftile-mutton" onclick="addFood('mutton')" role="button" tabindex="0" aria-label="Add mutton or beef meal">
+        <div class="food-count" id="fcount-mutton">0</div>
+        <div class="food-icon">🍖</div>
+        <div class="food-name">Mutton/Beef</div>
+        <div class="food-co2">3.5 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-chicken" onclick="addFood('chicken')" role="button" tabindex="0" aria-label="Add chicken meal">
+        <div class="food-count" id="fcount-chicken">0</div>
+        <div class="food-icon">🍗</div>
+        <div class="food-name">Chicken</div>
+        <div class="food-co2">0.72 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-fish" onclick="addFood('fish')" role="button" tabindex="0" aria-label="Add fish meal">
+        <div class="food-count" id="fcount-fish">0</div>
+        <div class="food-icon">🐟</div>
+        <div class="food-name">Fish</div>
+        <div class="food-co2">0.45 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-egg" onclick="addFood('egg')" role="button" tabindex="0" aria-label="Add eggs">
+        <div class="food-count" id="fcount-egg">0</div>
+        <div class="food-icon">🥚</div>
+        <div class="food-name">Eggs (2)</div>
+        <div class="food-co2">0.4 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-milk" onclick="addFood('milk')" role="button" tabindex="0" aria-label="Add glass of milk">
+        <div class="food-count" id="fcount-milk">0</div>
+        <div class="food-icon">🥛</div>
+        <div class="food-name">Milk (glass)</div>
+        <div class="food-co2">0.15 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-rice" onclick="addFood('rice')" role="button" tabindex="0" aria-label="Add rice plate">
+        <div class="food-count" id="fcount-rice">0</div>
+        <div class="food-icon">🍚</div>
+        <div class="food-name">Rice (plate)</div>
+        <div class="food-co2">0.16 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-dal" onclick="addFood('dal')" role="button" tabindex="0" aria-label="Add dal or lentils">
+        <div class="food-count" id="fcount-dal">0</div>
+        <div class="food-icon">🫘</div>
+        <div class="food-name">Dal/Lentils</div>
+        <div class="food-co2">0.10 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-roti" onclick="addFood('roti')" role="button" tabindex="0" aria-label="Add roti">
+        <div class="food-count" id="fcount-roti">0</div>
+        <div class="food-icon">🫓</div>
+        <div class="food-name">Roti (2)</div>
+        <div class="food-co2">0.05 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-snack" onclick="addFood('snack')" role="button" tabindex="0" aria-label="Add packaged snack">
+        <div class="food-count" id="fcount-snack">0</div>
+        <div class="food-icon">🍟</div>
+        <div class="food-name">Packaged snack</div>
+        <div class="food-co2">0.20 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-drink" onclick="addFood('drink')" role="button" tabindex="0" aria-label="Add cold drink">
+        <div class="food-count" id="fcount-drink">0</div>
+        <div class="food-icon">🥤</div>
+        <div class="food-name">Cold drink</div>
+        <div class="food-co2">0.22 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-tea" onclick="addFood('tea')" role="button" tabindex="0" aria-label="Add chai or tea">
+        <div class="food-count" id="fcount-tea">0</div>
+        <div class="food-icon">☕</div>
+        <div class="food-name">Chai/Tea</div>
+        <div class="food-co2">0.06 kg CO₂</div>
+      </div>
+      <div class="food-tile" id="ftile-waste" onclick="addFood('waste')" role="button" tabindex="0" aria-label="Add food waste">
+        <div class="food-count" id="fcount-waste">0</div>
+        <div class="food-icon">🗑️</div>
+        <div class="food-name">Food wasted</div>
+        <div class="food-co2">0.50 kg CO₂</div>
+      </div>
+    </div>
+
+    <div class="food-log-list" id="foodLogList"></div>
+    <div class="food-total" id="foodTotal" style="display:none;"></div>
+    <div class="food-tip" id="foodTip"></div>
+  </div>
+
+  <!-- ── SECTION 4: IMPACT SUMMARY ── -->
+  <div class="section" id="impactSection">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <div>
+        <div class="section-title">Today's impact</div>
+        <div class="section-sub">What your carbon footprint actually means</div>
+      </div>
+    </div>
+
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-emoji">🌳</div>
+        <div class="impact-num" id="treesNeeded">0</div>
+        <div class="impact-unit">trees/day</div>
+        <div class="impact-label">Needed to absorb this CO₂</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-emoji">💧</div>
+        <div class="impact-num" id="waterLitres">0</div>
+        <div class="impact-unit">litres</div>
+        <div class="impact-label">Freshwater consumed at power plants</div>
+      </div>
+      <div class="impact-card" id="vsIndianCard">
+        <div class="impact-emoji">🇮🇳</div>
+        <div class="impact-num" id="vsIndian" style="font-size:1.1rem; line-height:1.3;">—</div>
+        <div class="impact-label" style="margin-top:6px;">than the average Indian (5.2 kg/day)</div>
+      </div>
+    </div>
+
+    <!-- vs avg bar -->
+    <div class="vs-bar-wrap">
+      <div class="vs-bar-label">
+        <span>0 kg</span>
+        <span>Avg Indian: 5.2 kg</span>
+        <span>10 kg</span>
+      </div>
+      <div class="vs-bar-track">
+        <div class="vs-bar-fill" id="vsBarFill"></div>
+        <div class="vs-bar-avg" id="vsBarAvg" style="left:52%"></div>
+      </div>
+      <div class="vs-bar-note" id="vsBarNote">Fill in your activities above to see your impact</div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 5: SAVE ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">💾</div>
+      <div>
+        <div class="section-title">Save today's log</div>
+        <div class="section-sub">Your data is saved securely — only you can see it</div>
+      </div>
+    </div>
+    <button class="btn-save" id="saveBtn" onclick="saveLog()">Save today's log → view my report</button>
+    <div class="save-note" id="saveNote">You can update this log anytime today</div>
+  </div>
+
+</div>
+
+<footer>🌿 Dharohar · Made with 🤍 in India 🇮🇳 · © 2026</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  // ── SUPABASE ─────────────────────────────────────────────────
+  const SUPABASE_URL  = 'https://yljfwnwrdsumaohbghnr.supabase.co'
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsamZ3bndyZHN1bWFvaGJnaG5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjAwODIsImV4cCI6MjA5Njg5NjA4Mn0.5hUMp4A59waDhR_yDDf9KP7AIMsJ83bWtWbaXKsb9Hs'
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  })
+
+  // ── BACK/FORWARD CACHE FIX ─────────────────────────────────────
+  // FIXED: when you save and land on report.html, then hit the browser's
+  // Back button, the browser often restores this page from its
+  // back/forward cache instead of actually reloading it — meaning this
+  // script never re-runs and the page just keeps showing whatever was on
+  // screen when you left (yesterday's trips/food/energy, if a new day has
+  // started since). Forcing a real reload here makes sure the date check
+  // and data fetch always run fresh.
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) window.location.reload()
+  })
+
+  // ── SANITIZE ─────────────────────────────────────────────────
+  function sanitize(str) {
+    if (!str || typeof str !== 'string') return ''
+    return str.replace(/[<>'"`]/g, '').replace(/javascript:/gi, '').trim().slice(0, 100)
+  }
+
+  // ── LOCAL DATE HELPER (fixes timezone bug) ───────────────────
+  function getLocalISODate(d = new Date()) {
+    const offset = d.getTimezoneOffset() * 60000
+    const local = new Date(d.getTime() - offset)
+    return local.toISOString().split('T')[0]
+  }
+
+  // ── AUTH GUARD ───────────────────────────────────────────────
+  async function guardPage() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error || !session?.user) {
+        window.location.replace('index.html')
+        return null
+      }
+
+      const expiresAt = session.expires_at * 1000
+      if (Date.now() >= expiresAt) {
+        await supabase.auth.signOut()
+        window.location.replace('index.html')
+        return null
+      }
+
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (!uuidPattern.test(session.user.id)) {
+        await supabase.auth.signOut()
+        window.location.replace('index.html')
+        return null
+      }
+
+      return session.user
+    } catch (err) {
+      console.error('Auth guard error:', err)
+      window.location.replace('index.html')
+      return null
+    }
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────
+  async function init() {
+    try {
+      const user = await guardPage()
+      if (!user) return
+
+      document.getElementById('loadingScreen').classList.add('hidden')
+
+      const userName = sanitize(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Friend').split(' ')[0]
+
+      // ── SET GREETING ─────────────────────────────────────────
+      const now = new Date()
+      const hour = now.getHours()
+      const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+      document.getElementById('topGreeting').textContent = `${greeting}, ${userName}! 🙏`
+      document.getElementById('topDate').textContent = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+      document.getElementById('navUser').textContent = userName
+
+      // ── FETCH STREAK ─────────────────────────────────────────
+      try {
+        const { data: profile } = await supabase.from('profiles').select('current_streak').eq('id', user.id).single()
+        if (profile) document.getElementById('navStreak').textContent = `🔥 ${profile.current_streak} day streak`
+      } catch (e) {
+        console.error('Streak fetch error:', e)
+      }
+
+      // ── ADAPTIVE BASELINE ─────────────────────────────────────
+      // Phase 1 (days 1–7):   use national avg 5.2 kg — user is new, no personal data
+      // Phase 2 (days 8–29):  blend national avg toward personal avg as data grows
+      // Phase 3 (30+ days):   use personal 30-day rolling avg × 0.95 — always push
+      //                        the user to be slightly better than their recent self
+      const NATIONAL_AVG = 5.2
+      let adaptiveBaseline = NATIONAL_AVG        // updated after logs load
+      let baselineLabel    = 'avg Indian'        // shown in UI
+      let daysLoggedTotal  = 0                   // filled by loadTodayLog / init
+
+      function computeAdaptiveBaseline(allLogs) {
+        // allLogs = array of { date, total_co2_kg } sorted ascending
+        const n = allLogs.length
+        daysLoggedTotal = n
+        if (n < 8) {
+          adaptiveBaseline = NATIONAL_AVG
+          baselineLabel    = 'avg Indian (5.2 kg)'
+          return
+        }
+        // Personal rolling average (up to last 30 logged days)
+        const recent = allLogs.slice(-30)
+        const personalAvg = recent.reduce((s, l) => s + l.total_co2_kg, 0) / recent.length
+
+        if (n < 30) {
+          // Phase 2: weighted blend — more personal weight as days increase
+          const t = (n - 8) / (30 - 8)              // 0 → 1 as days go from 8 to 30
+          adaptiveBaseline = parseFloat((NATIONAL_AVG * (1 - t) + personalAvg * t).toFixed(3))
+          baselineLabel    = `blended baseline (${adaptiveBaseline.toFixed(1)} kg)`
+        } else {
+          // Phase 3: personal avg with 5% downward nudge so it always improves
+          adaptiveBaseline = parseFloat((personalAvg * 0.95).toFixed(3))
+          baselineLabel    = `your target (${adaptiveBaseline.toFixed(1)} kg)`
+        }
+      }
+
+      const CO2_PER_KM = { ola:0.16, auto:0.09, bus:0.008, metro:0.004, train:0.003, flight:0.255, walk:0 }
+      const MODE_NAMES = { ola:'Ola/Uber', auto:'Auto', bus:'Bus', metro:'Metro', train:'Train', flight:'Flight', walk:'Walk/Cycle' }
+
+      // ── STATE ────────────────────────────────────────────────
+      let trips        = []
+      let travelCo2    = 0
+      let energyCo2    = 0
+      let foodCo2      = 0
+      let foodItems    = []
+      let currentMode  = null
+      let pendingTrip  = null
+      let deleteCallback = null
+
+      // Food emission factors
+      const FOOD_DATA = {
+        mutton: { name: 'Mutton/Beef meal',   icon: '🍖', co2: 3.50 },
+        chicken:{ name: 'Chicken meal',       icon: '🍗', co2: 0.72 },
+        fish:   { name: 'Fish meal',          icon: '🐟', co2: 0.45 },
+        egg:    { name: 'Eggs (2)',           icon: '🥚', co2: 0.40 },
+        milk:   { name: 'Milk (glass)',       icon: '🥛', co2: 0.15 },
+        rice:   { name: 'Rice (plate)',       icon: '🍚', co2: 0.16 },
+        dal:    { name: 'Dal/Lentils',        icon: '🫘', co2: 0.10 },
+        roti:   { name: 'Roti (2 pcs)',       icon: '🫓', co2: 0.05 },
+        snack:  { name: 'Packaged snack',     icon: '🍟', co2: 0.20 },
+        drink:  { name: 'Cold drink (bottle)',icon: '🥤', co2: 0.22 },
+        tea:    { name: 'Chai/Tea',           icon: '☕', co2: 0.06 },
+        waste:  { name: 'Food wasted (plate)',icon: '🗑️', co2: 0.50 },
+      }
+
+      // ── LOAD TODAY'S SAVED LOG ───────────────────────────────
+      // FIXED: data was being saved to Supabase correctly, but nothing ever
+      // read it back, so leaving and returning to the page (or refreshing)
+      // always rendered a blank/zero state even though the save had worked.
+      // This restores everything logged for today (resets naturally at
+      // midnight because it's keyed on today's local date).
+      async function loadTodayLog() {
+        const today = getLocalISODate()
+
+        try {
+          // Fetch ALL past logs to compute personal adaptive baseline
+          const { data: allPastLogs, error: alErr } = await supabase
+            .from('daily_logs')
+            .select('date, total_co2_kg')
+            .eq('user_id', user.id)
+            .order('date', { ascending: true })
+          if (alErr) throw alErr
+
+          // Exclude today — baseline is built from completed past days only
+          const pastOnly = (allPastLogs || []).filter(l => l.date !== today)
+          computeAdaptiveBaseline(pastOnly)
+
+          const { data: dailyLog, error: dErr } = await supabase
+            .from('daily_logs')
+            .select('total_co2_kg')
+            .eq('user_id', user.id)
+            .eq('date', today)
+            .maybeSingle()
+          if (dErr) throw dErr
+          if (!dailyLog) return // nothing saved yet today, leave the blank state
+
+          const [{ data: travelRows, error: tErr }, { data: foodRows, error: fErr }, { data: energyRow, error: eErr }] = await Promise.all([
+            supabase.from('travel_logs').select('*').eq('user_id', user.id).eq('date', today),
+            supabase.from('food_logs').select('*').eq('user_id', user.id).eq('date', today),
+            supabase.from('home_energy_logs').select('*').eq('user_id', user.id).eq('date', today).maybeSingle()
+          ])
+          if (tErr) throw tErr
+          if (fErr) throw fErr
+          if (eErr) throw eErr
+
+          if (travelRows?.length) {
+            trips = travelRows.map((r, i) => ({
+              id: r.id ?? Date.now() + i,
+              mode: r.mode,
+              modeName: MODE_NAMES[r.mode] || r.mode,
+              from: r.from_place || '',
+              to: r.to_place || '',
+              distanceKm: parseFloat(r.distance_km) || 0,
+              co2: parseFloat(r.co2_kg) || 0
+            }))
+            travelCo2 = parseFloat(trips.reduce((s, t) => s + t.co2, 0).toFixed(3))
+          }
+
+          if (foodRows?.length) {
+            foodItems = foodRows.map((r, i) => ({
+              id: r.id ?? Date.now() + i,
+              key: r.food_type,
+              name: r.food_name,
+              icon: FOOD_DATA[r.food_type]?.icon || '🍽️',
+              co2: parseFloat(r.co2_kg) || 0
+            }))
+          }
+
+          if (energyRow) {
+            document.getElementById('acHours').value = energyRow.ac_hours ?? 0
+            document.getElementById('acTemp').value = energyRow.ac_temp ?? 24
+            document.getElementById('geyserHours').value = energyRow.geyser_hours ?? 0
+            document.getElementById('washingMachine').checked = !!energyRow.washing_machine
+            document.getElementById('tvHours').value = energyRow.tv_hours ?? 0
+            document.getElementById('fanHours').value = energyRow.fan_hours ?? 0
+            document.getElementById('gasHours').value = energyRow.gas_stove_hours ?? 0
+          }
+
+          // Re-render the UI with the restored data (these are defined further
+          // down but already exist on window/in scope by the time this runs,
+          // since loadTodayLog is only called at the very end of init())
+          renderTrips()
+          renderFoodLog()
+          window.updateEnergy()
+          if (travelRows?.length || foodRows?.length || energyRow) {
+            showToast("↩️ Restored what you logged earlier today")
+          }
+        } catch (err) {
+          console.error('Load today log error:', err)
+          showToast("Couldn't load today's earlier entries — starting fresh")
+        }
+      }
+
+      // ── DROPDOWN ───────────────────────────────────────────
+      window.toggleMenu = () => {
+        document.getElementById('menuBtn').classList.toggle('open')
+        document.getElementById('dropdown').classList.toggle('open')
+      }
+      document.addEventListener('click', e => {
+        const m = document.querySelector('.nav-menu')
+        if (m && !m.contains(e.target)) {
+          document.getElementById('menuBtn').classList.remove('open')
+          document.getElementById('dropdown').classList.remove('open')
+        }
+      })
+
+      // ── SIGN OUT ─────────────────────────────────────────
+      window.handleSignOut = async () => {
+        await supabase.auth.signOut()
+        window.location.replace('index.html')
+      }
+
+      // ── SLIDER ADJUST ────────────────────────────────────
+      window.adjustSlider = (id, delta) => {
+        const el = document.getElementById(id)
+        const step = parseFloat(el.step) || 1
+        const newVal = Math.max(parseFloat(el.min), Math.min(parseFloat(el.max), parseFloat(el.value) + delta))
+        el.value = Math.round(newVal / step) * step
+        updateEnergy()
+      }
+
+      // ── PLACE COORDS CACHE ─────────────────────────────────
+      const placeCoords = {}
+      let searchTimers = {}
+
+      // ── ABBREV EXPANDER ────────────────────────────────────
+      const ABBREV_MAP = {
+        'junc': 'junction', 'jn': 'junction',
+        'st': 'station', 'stn': 'station', 'rly': 'railway',
+        'rd': 'road', 'mkt': 'market', 'ngr': 'nagar',
+        'clg': 'college', 'hosp': 'hospital', 'apt': 'airport',
+        'sec': 'sector', 'blk': 'block'
+      }
+
+      function expandQuery(q) {
+        return q.split(/\s+/).map(w => ABBREV_MAP[w.toLowerCase()] || w).join(' ')
+      }
+
+      // ── HIGHLIGHT MATCH ────────────────────────────────────
+      function highlightMatch(text, query) {
+        const safe = sanitize(text)
+        const words = query.trim().split(/\s+/).filter(w => w.length > 1)
+        if (!words.length) return safe
+        const regex = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi')
+        return safe.replace(regex, '<mark>$1</mark>')
+      }
+
+      // ── PHOTON AUTOCOMPLETE ────────────────────────────────
+      const activeHighlight = {}
+
+      function placeIconPhoton(feat) {
+        const type = (feat.properties.osm_value || '').toLowerCase()
+        const key  = (feat.properties.osm_key   || '').toLowerCase()
+        if (type === 'station' || type === 'halt' || type === 'railway_station') return '🚉'
+        if (type === 'airport') return '✈️'
+        if (type === 'bus_stop' || type === 'bus_station') return '🚌'
+        if (key === 'highway' || type === 'road') return '🛣️'
+        if (type === 'hospital' || type === 'clinic') return '🏥'
+        if (type === 'school') return '🏫'
+        if (type === 'college' || type === 'university') return '🎓'
+        return '📍'
+      }
+
+      const BIAS_LON = 85.1376, BIAS_LAT = 25.5941
+
+      window.searchPlace = async (input, listId) => {
+        const rawQuery = input.value.trim()
+        const list     = document.getElementById(listId)
+        const wrap     = input.closest('.autocomplete-wrap')
+
+        if (rawQuery.length < 2) { list.style.display = 'none'; return }
+
+        clearTimeout(searchTimers[listId])
+        searchTimers[listId] = setTimeout(async () => {
+          wrap?.classList.add('loading')
+          try {
+            const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(rawQuery)}&limit=8&lang=en&lon=${BIAS_LON}&lat=${BIAS_LAT}&location_bias_scale=0.5`
+            const res  = await fetch(url, { headers: { 'User-Agent': 'Dharohar-App' } })
+            const data = await res.json()
+
+            const seen = new Set()
+            const features = (data.features || [])
+              .filter(f => {
+                const cc = (f.properties.countrycode || '').toUpperCase()
+                const key = `${f.geometry.coordinates[0].toFixed(3)},${f.geometry.coordinates[1].toFixed(3)}`
+                if (cc !== 'IN' || seen.has(key)) return false
+                seen.add(key); return true
+              })
+              .slice(0, 7)
+
+            list.innerHTML = ''
+            activeHighlight[listId] = -1
+
+            if (!features.length) {
+              list.innerHTML = `<div class="autocomplete-no-result">No results — keep typing</div>`
+              list.style.display = 'block'
+              wrap?.classList.remove('loading')
+              return
+            }
+
+            features.forEach((feat, idx) => {
+              const p        = feat.properties
+              const mainName = p.name || p.street || ''
+              const subParts = [p.city || p.county, p.state].filter(Boolean)
+              const subName  = subParts.join(', ')
+              const icon     = placeIconPhoton(feat)
+              const coords   = feat.geometry.coordinates
+
+              const item = document.createElement('div')
+              item.className = 'autocomplete-item'
+              item.dataset.idx = idx
+              item.innerHTML = `
+                <div class="place-icon">${icon}</div>
+                <div class="place-info">
+                  <div class="place-main">${highlightMatch(mainName, rawQuery)}</div>
+                  <div class="place-sub">${sanitize(subName)}</div>
+                </div>`
+
+              // Use pointerdown instead of mousedown to avoid blur race
+              item.addEventListener('pointerdown', (e) => {
+                e.preventDefault()
+                input.value = [mainName, ...subParts.slice(0,1)].filter(Boolean).join(', ')
+                placeCoords[input.id] = { lat: coords[1], lon: coords[0] }
+                list.style.display = 'none'
+                activeHighlight[listId] = -1
+              })
+              list.appendChild(item)
+            })
+            list.style.display = 'block'
+          } catch (e) {
+            list.style.display = 'none'
+          }
+          wrap?.classList.remove('loading')
+        }, 280)
+      }
+
+      // ── KEYBOARD NAVIGATION ────────────────────────────────
+      window.handleKey = (e, listId) => {
+        const list  = document.getElementById(listId)
+        const items = list.querySelectorAll('.autocomplete-item')
+        if (!items.length || list.style.display === 'none') return
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault()
+          activeHighlight[listId] = Math.min((activeHighlight[listId] ?? -1) + 1, items.length - 1)
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault()
+          activeHighlight[listId] = Math.max((activeHighlight[listId] ?? 0) - 1, 0)
+        } else if (e.key === 'Enter') {
+          e.preventDefault()
+          const idx = activeHighlight[listId]
+          if (idx >= 0 && items[idx]) {
+            items[idx].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+          }
+          return
+        } else if (e.key === 'Escape') {
+          list.style.display = 'none'; return
+        } else { return }
+
+        items.forEach((it, i) => it.classList.toggle('highlighted', i === activeHighlight[listId]))
+        items[activeHighlight[listId]]?.scrollIntoView({ block: 'nearest' })
+      }
+
+      window.hideList = (listId) => {
+        setTimeout(() => {
+          const el = document.getElementById(listId)
+          if (el) el.style.display = 'none'
+        }, 200)
+      }
+
+      // ── OSRM DISTANCE ──────────────────────────────────────
+      async function getOSRMDistance(fromCoords, toCoords) {
+        try {
+          const url = `https://router.project-osrm.org/route/v1/driving/${fromCoords.lon},${fromCoords.lat};${toCoords.lon},${toCoords.lat}?overview=false`
+          const res  = await fetch(url)
+          const data = await res.json()
+          if (data.code === 'Ok' && data.routes?.length) {
+            return parseFloat((data.routes[0].distance / 1000).toFixed(2))
+          }
+        } catch (e) { console.error('OSRM error', e) }
+        return 0
+      }
+
+      // ── MODE SELECT ───────────────────────────────────────────
+      window.selectMode = (tile) => {
+        document.querySelectorAll('.mode-tile').forEach(t => t.classList.remove('selected'))
+        tile.classList.add('selected')
+        currentMode = tile.dataset.mode
+        document.getElementById('tripInputBox').classList.add('visible')
+        document.getElementById('tripResult').classList.remove('visible')
+        document.getElementById('manualDistBox').classList.remove('visible')
+        document.getElementById('addTripBtn').style.display = 'none'
+        document.getElementById('calcBtn').style.display = 'inline-block'
+        document.getElementById('fromPlace').value = ''
+        document.getElementById('toPlace').value = ''
+        document.getElementById('fromList').style.display = 'none'
+        document.getElementById('toList').style.display = 'none'
+        delete placeCoords['fromPlace']
+        delete placeCoords['toPlace']
+        pendingTrip = null
+      }
+
+      window.cancelTrip = () => {
+        document.getElementById('tripInputBox').classList.remove('visible')
+        document.querySelectorAll('.mode-tile').forEach(t => t.classList.remove('selected'))
+        currentMode = null
+        pendingTrip = null
+      }
+
+      // ── MANUAL DISTANCE FALLBACK ───────────────────────────
+      window.useManualDistance = () => {
+        const dist = parseFloat(document.getElementById('manualDistInput').value)
+        if (!dist || dist <= 0) {
+          showToast('Please enter a valid distance')
+          return
+        }
+        const modeNames = { ola:'Ola/Uber', auto:'Auto', bus:'Bus', metro:'Metro', train:'Train', flight:'Flight', walk:'Walk/Cycle' }
+        const co2 = parseFloat((dist * (CO2_PER_KM[currentMode] || 0)).toFixed(3))
+        const from = sanitize(document.getElementById('fromPlace').value.trim())
+        const to = sanitize(document.getElementById('toPlace').value.trim())
+        pendingTrip = { mode: currentMode, modeName: modeNames[currentMode], from, to, distanceKm: dist, co2 }
+
+        const resultEl = document.getElementById('tripResult')
+        resultEl.classList.add('visible')
+        if (currentMode === 'walk') {
+          resultEl.innerHTML = `🚶 <strong>${from} → ${to}</strong> · ${dist.toFixed(1)} km · <span style="color:var(--forest);font-weight:700;">0 kg CO₂ ✅ Great choice!</span>`
+        } else {
+          resultEl.innerHTML = `${getModeIcon(currentMode)} <strong>${from} → ${to}</strong> · ${dist.toFixed(1)} km · <span style="color:var(--forest);font-weight:700;">${co2} kg CO₂</span>`
+        }
+        document.getElementById('manualDistBox').classList.remove('visible')
+        document.getElementById('addTripBtn').style.display = 'inline-block'
+      }
+
+      // ── CALCULATE TRIP ───────────────────────────────────
+      window.calculateTrip = async () => {
+        const from = sanitize(document.getElementById('fromPlace').value.trim())
+        const to   = sanitize(document.getElementById('toPlace').value.trim())
+
+        if (!currentMode)  { showToast('Please select a travel mode first'); return }
+        if (!from || !to)  { showToast('Please enter both From and To places'); return }
+
+        const btn = document.getElementById('calcBtn')
+        btn.textContent = 'Calculating...'
+        btn.disabled = true
+
+        let distanceKm = 0
+        const fromCoords = placeCoords['fromPlace']
+        const toCoords   = placeCoords['toPlace']
+
+        if (fromCoords && toCoords) {
+          distanceKm = await getOSRMDistance(fromCoords, toCoords)
+        }
+
+        if (!distanceKm || distanceKm <= 0) {
+          try {
+            const [r1, r2] = await Promise.all([
+              fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(from)}&countrycodes=in&format=json&limit=1`, { headers: {'User-Agent':'Dharohar-App'} }).then(r => r.json()),
+              fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(to)}&countrycodes=in&format=json&limit=1`,   { headers: {'User-Agent':'Dharohar-App'} }).then(r => r.json())
+            ])
+            if (r1[0] && r2[0]) {
+              distanceKm = await getOSRMDistance(
+                { lat: parseFloat(r1[0].lat), lon: parseFloat(r1[0].lon) },
+                { lat: parseFloat(r2[0].lat), lon: parseFloat(r2[0].lon) }
+              )
+            }
+          } catch(e) { console.error('Geocode fallback error', e) }
+        }
+
+        btn.textContent = 'Calculate distance & CO₂'
+        btn.disabled = false
+
+        if (!distanceKm || distanceKm <= 0) {
+          // Show manual distance fallback instead of failing
+          document.getElementById('manualDistBox').classList.add('visible')
+          showToast('Auto-calculation failed. Enter distance manually below.')
+          return
+        }
+
+        const modeNames = { ola:'Ola/Uber', auto:'Auto', bus:'Bus', metro:'Metro', train:'Train', flight:'Flight', walk:'Walk/Cycle' }
+        const co2 = parseFloat((distanceKm * (CO2_PER_KM[currentMode] || 0)).toFixed(3))
+        pendingTrip = { mode: currentMode, modeName: modeNames[currentMode], from, to, distanceKm, co2 }
+
+        const resultEl = document.getElementById('tripResult')
+        resultEl.classList.add('visible')
+        if (currentMode === 'walk') {
+          resultEl.innerHTML = `🚶 <strong>${from} → ${to}</strong> · ${distanceKm.toFixed(1)} km · <span style="color:var(--forest);font-weight:700;">0 kg CO₂ ✅ Great choice!</span>`
+        } else {
+          resultEl.innerHTML = `${getModeIcon(currentMode)} <strong>${from} → ${to}</strong> · ${distanceKm.toFixed(1)} km · <span style="color:var(--forest);font-weight:700;">${co2} kg CO₂</span>`
+        }
+        document.getElementById('addTripBtn').style.display = 'inline-block'
+      }
+
+      function getModeIcon(mode) {
+        return { ola:'🚗', auto:'🛺', bus:'🚌', metro:'🚇', train:'🚆', flight:'✈️', walk:'🚶' }[mode] || '🚗'
+      }
+
+      // ── ADD TRIP ─────────────────────────────────────────
+      window.addTrip = () => {
+        if (!pendingTrip) return
+        trips.push({ ...pendingTrip, id: Date.now() })
+        travelCo2 = parseFloat(trips.reduce((s, t) => s + t.co2, 0).toFixed(3))
+        renderTrips()
+        updateTotal()
+        cancelTrip()
+        showToast('Trip added ✅')
+      }
+
+      function renderTrips() {
+        const list = document.getElementById('tripsList')
+        list.innerHTML = ''
+        const fragment = document.createDocumentFragment()
+        trips.forEach(t => {
+          const div = document.createElement('div')
+          div.className = 'trip-item'
+          const route = t.from && t.to ? `${t.from} → ${t.to}` : `${t.distanceKm.toFixed(1)} km`
+          div.innerHTML = `
+            <div class="trip-item-left">
+              <span style="font-size:1.1rem;">${getModeIcon(t.mode)}</span>
+              <div>
+                <div style="font-weight:600; font-size:0.85rem;">${t.modeName}</div>
+                <div style="font-size:0.75rem; color:var(--muted);">${route} · ${t.distanceKm.toFixed(1)} km</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="trip-item-co2">${t.co2} kg CO₂</span>
+              <button class="trip-item-del" onclick="promptDeleteTrip(${t.id})" aria-label="Delete trip">✕</button>
+            </div>`
+          fragment.appendChild(div)
+        })
+        list.appendChild(fragment)
+        const totalEl = document.getElementById('travelTotal')
+        totalEl.textContent = trips.length > 0 ? `Travel subtotal: ${travelCo2.toFixed(2)} kg CO₂` : ''
+      }
+
+      // ── DELETE CONFIRMATION ────────────────────────────────
+      window.promptDeleteTrip = (id) => {
+        deleteCallback = () => {
+          trips = trips.filter(t => t.id !== id)
+          travelCo2 = parseFloat(trips.reduce((s, t) => s + t.co2, 0).toFixed(3))
+          renderTrips()
+          updateTotal()
+          closeModal()
+        }
+        document.getElementById('modalTitle').textContent = 'Remove trip?'
+        document.getElementById('modalText').textContent = 'This trip will be removed from your log.'
+        document.getElementById('deleteModal').classList.add('visible')
+      }
+
+      window.promptDeleteFood = (id) => {
+        deleteCallback = () => {
+          foodItems = foodItems.filter(f => f.id !== id)
+          renderFoodLog()
+          closeModal()
+        }
+        document.getElementById('modalTitle').textContent = 'Remove food item?'
+        document.getElementById('modalText').textContent = 'This item will be removed from your log.'
+        document.getElementById('deleteModal').classList.add('visible')
+      }
+
+      window.closeModal = () => {
+        document.getElementById('deleteModal').classList.remove('visible')
+        deleteCallback = null
+      }
+
+      window.confirmDelete = () => {
+        if (deleteCallback) deleteCallback()
+      }
+
+      // ── HOME ENERGY ────────────────────────────────────────
+      // Extracted shared AC factor calculation
+      function getACTempFactor(temp) {
+        return 1 + Math.max(0, (24 - temp)) * 0.06
+      }
+
+      window.updateEnergy = () => {
+        const acH  = parseFloat(document.getElementById('acHours').value)
+        const acT  = parseInt(document.getElementById('acTemp').value)
+        const geyH = parseFloat(document.getElementById('geyserHours').value)
+        const tvH  = parseFloat(document.getElementById('tvHours').value)
+        const fanH = parseFloat(document.getElementById('fanHours').value)
+        const gasH = parseFloat(document.getElementById('gasHours').value)
+        const wash = document.getElementById('washingMachine').checked
+
+        const acTempFactor = getACTempFactor(acT)
+        const acCo2  = parseFloat((acH * 1.3 * acTempFactor).toFixed(3))
+        const geyCo2 = parseFloat((geyH * 1.2).toFixed(3))
+        const tvCo2  = parseFloat((tvH * 0.1).toFixed(3))
+        const fanCo2 = parseFloat((fanH * 0.03).toFixed(3))
+        const gasCo2 = parseFloat((gasH * 0.22).toFixed(3))
+        const washCo2 = wash ? 0.6 : 0
+
+        energyCo2 = parseFloat((acCo2 + geyCo2 + tvCo2 + fanCo2 + gasCo2 + washCo2).toFixed(3))
+
+        // Update labels
+        document.getElementById('acHoursVal').textContent = `${acH} hrs`
+        document.getElementById('acTempVal').textContent  = `${acT}°C`
+        document.getElementById('acCo2').textContent      = `${acCo2.toFixed(2)} kg CO₂${acT < 24 ? ' ⚠️ higher due to low temp' : ''}`
+        document.getElementById('geyserVal').textContent  = `${geyH} hrs`
+        document.getElementById('geyserCo2').textContent  = `${geyCo2.toFixed(2)} kg CO₂`
+        document.getElementById('tvVal').textContent      = `${tvH} hrs`
+        document.getElementById('tvCo2').textContent      = `${tvCo2.toFixed(2)} kg CO₂`
+        document.getElementById('fanVal').textContent     = `${fanH} hrs`
+        document.getElementById('fanCo2').textContent     = `${fanCo2.toFixed(2)} kg CO₂`
+        document.getElementById('gasVal').textContent     = `${gasH} hrs`
+        document.getElementById('gasCo2').textContent     = `${gasCo2.toFixed(2)} kg CO₂`
+        document.getElementById('washVal').textContent    = wash ? 'Used' : 'Off'
+        document.getElementById('washCo2').textContent    = `${washCo2.toFixed(2)} kg CO₂`
+        document.getElementById('energyTotal').textContent = `Home energy subtotal: ${energyCo2.toFixed(2)} kg CO₂`
+
+        // Show warnings for extreme values
+        document.getElementById('acWarning').classList.toggle('visible', acH > 8)
+        document.getElementById('geyserWarning').classList.toggle('visible', geyH > 2)
+        document.getElementById('gasWarning').classList.toggle('visible', gasH > 3)
+
+        updateTotal()
+      }
+
+      // ── FOOD LOGGING ───────────────────────────────────────
+      window.addFood = (key) => {
+        const d = FOOD_DATA[key]
+        if (!d) return
+        const id = Date.now()
+        foodItems.push({ id, key, name: d.name, icon: d.icon, co2: d.co2 })
+        renderFoodLog()
+      }
+
+      window.removeFood = (id) => {
+        promptDeleteFood(id)
+      }
+
+      function renderFoodLog() {
+        foodCo2 = parseFloat(foodItems.reduce((s, f) => s + f.co2, 0).toFixed(3))
+
+        Object.keys(FOOD_DATA).forEach(key => {
+          const count = foodItems.filter(f => f.key === key).length
+          const tile  = document.getElementById(`ftile-${key}`)
+          const badge = document.getElementById(`fcount-${key}`)
+          if (tile && badge) {
+            badge.textContent = count
+            tile.classList.toggle('has-count', count > 0)
+          }
+        })
+
+        const list = document.getElementById('foodLogList')
+        const fragment = document.createDocumentFragment()
+        foodItems.forEach(f => {
+          const div = document.createElement('div')
+          div.className = 'food-log-item'
+          div.innerHTML = `
+            <div class="food-log-left">
+              <span>${f.icon}</span>
+              <span>${sanitize(f.name)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="food-log-co2">+${f.co2.toFixed(2)} kg CO₂</span>
+              <button class="food-log-del" onclick="removeFood(${f.id})" aria-label="Remove ${f.name}">✕</button>
+            </div>`
+          fragment.appendChild(div)
+        })
+        list.innerHTML = ''
+        list.appendChild(fragment)
+
+        const totalEl = document.getElementById('foodTotal')
+        if (foodItems.length) {
+          totalEl.textContent = `Food subtotal: ${foodCo2.toFixed(2)} kg CO₂`
+          totalEl.style.display = 'block'
+        } else {
+          totalEl.style.display = 'none'
+        }
+
+        const tipEl = document.getElementById('foodTip')
+        const hasMeat = foodItems.some(f => ['mutton','chicken','fish'].includes(f.key))
+        const hasWaste = foodItems.some(f => f.key === 'waste')
+        if (hasWaste) {
+          tipEl.innerHTML = '🗑️ <strong>Food waste tip:</strong> Wasted food emits CO₂ twice — once to produce it, again as it rots. Storing leftovers properly can save 0.5 kg CO₂ per plate.'
+          tipEl.classList.add('visible')
+        } else if (foodItems.some(f => f.key === 'mutton')) {
+          tipEl.innerHTML = '🌱 <strong>Did you know?</strong> One mutton meal = same CO₂ as driving ~40 km by Ola. Replacing it with dal saves ~3.4 kg CO₂ — equivalent to 10 litres of freshwater.'
+          tipEl.classList.add('visible')
+        } else if (foodItems.some(f => f.key === 'chicken')) {
+          tipEl.innerHTML = '🌱 <strong>Tip:</strong> Replacing one chicken meal with paneer or dal saves ~0.6 kg CO₂ — same as skipping an 8 km auto ride.'
+          tipEl.classList.add('visible')
+        } else {
+          tipEl.classList.remove('visible')
+        }
+
+        updateTotal()
+      }
+
+      // ── TOTAL & IMPACT ─────────────────────────────────────
+      function updateTotal() {
+        const total = parseFloat((travelCo2 + energyCo2 + foodCo2).toFixed(2))
+        const base  = adaptiveBaseline
+        const label = baselineLabel
+
+        // Live pill
+        document.getElementById('liveNum').textContent = `${total.toFixed(1)} kg`
+        const pill   = document.getElementById('livePill')
+        const status = document.getElementById('liveStatus')
+        pill.classList.remove('green', 'red')
+        status.classList.remove('below', 'above')
+        status.textContent = ''
+
+        if (total > 0 && total < base) {
+          pill.classList.add('green')
+          status.textContent = '✅ Below your target'
+          status.classList.add('below')
+        } else if (total >= base) {
+          pill.classList.add('red')
+          status.textContent = '⚠️ Above your target'
+          status.classList.add('above')
+        }
+
+        // Impact cards
+        document.getElementById('treesNeeded').textContent = (total * 0.045).toFixed(2)
+        document.getElementById('waterLitres').textContent  = Math.round(total * 3)
+
+        // Update the card label to show what baseline we're using
+        document.querySelector('#vsIndianCard .impact-label').textContent = `vs ${label}`
+
+        const diff = parseFloat((total - base).toFixed(2))
+        const vsEl = document.getElementById('vsIndian')
+        if (total === 0) {
+          vsEl.textContent = '—'
+          document.getElementById('vsIndianCard').style.background = ''
+        } else if (diff < 0) {
+          vsEl.textContent = `${Math.abs(diff).toFixed(2)} kg less`
+          vsEl.style.color = 'var(--forest)'
+          document.getElementById('vsIndianCard').style.background = 'var(--leaf-light)'
+        } else if (diff === 0) {
+          vsEl.textContent = 'exactly on target'
+          vsEl.style.color = 'var(--muted)'
+          document.getElementById('vsIndianCard').style.background = ''
+        } else {
+          vsEl.textContent = `${diff.toFixed(2)} kg more`
+          vsEl.style.color = 'var(--danger)'
+          document.getElementById('vsIndianCard').style.background = '#fff0f0'
+        }
+
+        // Progress bar — marker moves to reflect adaptive baseline position
+        const barMax = Math.max(base * 2, 10)
+        const pct    = Math.min(total / barMax * 100, 100)
+        const basePct = Math.min(base / barMax * 100, 100)
+        document.getElementById('vsBarFill').style.width      = `${pct}%`
+        document.getElementById('vsBarFill').style.background = total > base ? '#e74c3c' : 'var(--forest)'
+        document.getElementById('vsBarAvg').style.left        = `${basePct}%`
+
+        // Update bar labels
+        const barLabels = document.querySelectorAll('.vs-bar-label span')
+        if (barLabels[1]) barLabels[1].textContent = `Target: ${base.toFixed(1)} kg`
+
+        let note = ''
+        if (total === 0) note = 'Fill in your activities above to see your impact'
+        else if (diff < 0) note = `🎉 You are ${Math.abs(diff).toFixed(2)} kg below your target today!`
+        else if (diff === 0) note = `You are exactly at your target today`
+        else note = `⚠️ You are ${diff.toFixed(2)} kg above your target today`
+        document.getElementById('vsBarNote').textContent = note
+      }
+
+      // ── SAVE LOG ─────────────────────────────────────────
+      window.saveLog = async () => {
+        const btn = document.getElementById('saveBtn')
+        btn.disabled = true
+        btn.textContent = 'Saving...'
+
+        const today = getLocalISODate()  // FIXED: uses local timezone
+        const totalCo2 = parseFloat((travelCo2 + energyCo2 + foodCo2).toFixed(3))  // FIXED: includes food
+
+        try {
+          // FIXED: Supabase RLS can silently let a DELETE match zero rows
+          // (no error thrown) if the DELETE policy is missing or wrong —
+          // it just looks like success while doing nothing. That used to
+          // mean we'd insert fresh rows on top of rows that were never
+          // actually removed, doubling (then tripling...) every save.
+          // Now we verify deletion actually happened before inserting.
+          async function deleteAndVerify(table) {
+            const { error: delErr } = await supabase.from(table).delete().eq('user_id', user.id).eq('date', today)
+            if (delErr) throw delErr
+            const { count, error: chkErr } = await supabase
+              .from(table)
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', user.id)
+              .eq('date', today)
+            if (chkErr) throw chkErr
+            if (count > 0) {
+              throw new Error(
+                `Couldn't clear today's old ${table} entries before saving (Supabase still shows ${count} row(s)). ` +
+                `This usually means the DELETE row-level-security policy is missing on "${table}" in Supabase ` +
+                `(Authentication → Policies → ${table} → add a DELETE policy for authenticated users where user_id = auth.uid()). ` +
+                `Save was stopped to avoid creating duplicate entries.`
+              )
+            }
+          }
+
+          await deleteAndVerify('travel_logs')
+          await deleteAndVerify('food_logs')
+          await deleteAndVerify('home_energy_logs')
+
+          // FIXED: capture what was already saved for today (if anything) so
+          // the lifetime profile totals below can be adjusted by the delta
+          // instead of double-counting on every resave
+          const { data: existingDaily, error: exErr } = await supabase
+            .from('daily_logs')
+            .select('total_co2_kg')
+            .eq('user_id', user.id)
+            .eq('date', today)
+            .maybeSingle()
+          if (exErr) throw exErr
+
+          // Save travel logs
+          if (trips.length > 0) {
+            const travelRows = trips.map(t => ({
+              user_id: user.id, date: today,
+              mode: t.mode, from_place: t.from || '',
+              to_place: t.to || '', distance_km: t.distanceKm, co2_kg: t.co2
+            }))
+            const { error: tErr } = await supabase.from('travel_logs').insert(travelRows)
+            if (tErr) throw tErr
+          }
+
+          // Save energy log
+          const acH = parseFloat(document.getElementById('acHours').value)
+          const acT = parseInt(document.getElementById('acTemp').value)
+          const { error: eErr } = await supabase.from('home_energy_logs').insert({
+            user_id: user.id, date: today,
+            ac_hours: acH, ac_temp: acT,
+            geyser_hours: parseFloat(document.getElementById('geyserHours').value),
+            washing_machine: document.getElementById('washingMachine').checked,
+            tv_hours: parseFloat(document.getElementById('tvHours').value),
+            fan_hours: parseFloat(document.getElementById('fanHours').value),
+            gas_stove_hours: parseFloat(document.getElementById('gasHours').value),
+            co2_kg: energyCo2
+          })
+          if (eErr) throw eErr
+
+          // FIXED: Save food logs
+          if (foodItems.length > 0) {
+            const foodRows = foodItems.map(f => ({
+              user_id: user.id, date: today,
+              food_type: f.key, food_name: f.name,
+              co2_kg: f.co2
+            }))
+            const { error: fErr } = await supabase.from('food_logs').insert(foodRows)
+            if (fErr) throw fErr
+          }
+
+          // Upsert daily summary — FIXED: includes food_co2_kg
+          const { error: dErr } = await supabase.from('daily_logs').upsert({
+            user_id: user.id, date: today,
+            travel_co2_kg: travelCo2, energy_co2_kg: energyCo2,
+            food_co2_kg: foodCo2,  // FIXED: was missing
+            total_co2_kg: totalCo2, vs_avg_indian: parseFloat((totalCo2 - adaptiveBaseline).toFixed(3))
+          }, { onConflict: 'user_id,date' })
+          if (dErr) throw dErr
+
+          // Update profile totals — uses adaptiveBaseline so "saved" means
+          // something personal, not an unbeatable national macro figure
+          const prevSaved  = existingDaily ? Math.max(0, adaptiveBaseline - existingDaily.total_co2_kg) : 0
+          const newSaved   = Math.max(0, adaptiveBaseline - totalCo2)
+          const savedDelta = newSaved - prevSaved
+
+          const { data: currentProfile, error: pFetchErr } = await supabase
+            .from('profiles')
+            .select('total_co2_saved_kg, total_trees_planted, current_streak')
+            .eq('id', user.id)
+            .single()
+          if (pFetchErr) throw pFetchErr
+
+          const newSavedTotal = parseFloat(Math.max(0, (currentProfile?.total_co2_saved_kg || 0) + savedDelta).toFixed(3))
+          const newTreesTotal = parseFloat(Math.max(0, (currentProfile?.total_trees_planted || 0) + savedDelta * 0.045).toFixed(3))
+
+          // FIXED: streak counter was being read everywhere but never updated
+          // anywhere. Only recalculate it on the FIRST save of a given day
+          // (existingDaily is null) so editing/resaving today's log doesn't
+          // bump it repeatedly. Extends the streak if yesterday was also
+          // logged; otherwise this is a fresh start at 1.
+          let newStreak = currentProfile?.current_streak || 0
+          if (!existingDaily) {
+            const yesterday = getLocalISODate(new Date(Date.now() - 86400000))
+            const { data: yesterdayLog, error: yErr } = await supabase
+              .from('daily_logs')
+              .select('date')
+              .eq('user_id', user.id)
+              .eq('date', yesterday)
+              .maybeSingle()
+            if (yErr) throw yErr
+            newStreak = yesterdayLog ? newStreak + 1 : 1
+          }
+
+          const { error: pErr } = await supabase.from('profiles').update({
+            total_co2_saved_kg: newSavedTotal,
+            total_trees_planted: newTreesTotal,
+            current_streak: newStreak
+          }).eq('id', user.id)
+          if (pErr) throw pErr
+
+          showToast('✅ Log saved! Redirecting to your report...')
+          setTimeout(() => { window.location.href = 'report.html' }, 1800)
+
+        } catch (err) {
+          console.error('[Dharohar Save Error]', {
+            message: err?.message,
+            details: err?.details,
+            hint: err?.hint,
+            code: err?.code,
+            raw: err
+          })
+          const friendlyMsg = err?.message ? `Save failed: ${err.message}` : 'Something went wrong. Please try again.'
+          showToast(friendlyMsg)
+          btn.disabled = false
+          btn.textContent = 'Save today\'s log → view my report'
+        }
+      }
+
+      // ── TOAST ──────────────────────────────────────────────
+      function showToast(msg) {
+        const t = document.getElementById('toast')
+        t.textContent = sanitize(msg)
+        t.classList.add('show')
+        setTimeout(() => t.classList.remove('show'), 3000)
+      }
+      window.showToast = showToast
+
+      // Init
+      await loadTodayLog()
+      updateTotal()
+
+    } catch (initErr) {
+      console.error('Init error:', initErr)
+      showToast('Failed to initialize. Please refresh.')
+    }
+  }
+
+  init()
+</script>
+</body>
+</html>

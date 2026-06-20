@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dharohar — Shared Forest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --forest: #2D6A4F; --forest-mid: #40916C; --leaf: #74C69D;
+      --leaf-light: #D8F3DC; --earth: #1B3A2D; --cream: #F7FBFF;
+      --text: #1a2e22; --muted: #5a7a6a; --border: #e0ece6;
+    }
+    html, body { min-height: 100%; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--text); display: flex; align-items: center; justify-content: center; padding: 24px; }
+
+    .view-card {
+      max-width: 420px; width: 100%; background: white; border-radius: 24px;
+      overflow: hidden; box-shadow: 0 20px 60px rgba(45,106,79,0.15);
+    }
+    .scene {
+      position: relative; width: 100%; aspect-ratio: 4/5;
+      background: linear-gradient(180deg, #BEE3F8 0%, #DCEFFB 30%, #EAF7EE 65%, #74C69D 100%);
+      padding: 26px 22px; display: flex; flex-direction: column; justify-content: space-between;
+      overflow: hidden;
+    }
+    .brand { display:flex; align-items:center; gap:8px; position:relative; z-index:2; }
+    .brand-icon { width:24px; height:24px; }
+    .brand-name { font-family:'Playfair Display',serif; font-weight:700; color:var(--forest); font-size:0.95rem; }
+    .headline { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:700; color:var(--earth); margin-top:14px; line-height:1.3; position:relative; z-index:2; }
+    .sub { font-size:0.8rem; color:var(--forest-mid); margin-top:4px; font-weight:600; position:relative; z-index:2; }
+    .trees-layer { position:absolute; bottom:70px; left:0; width:100%; height:120px; z-index:1; }
+    .bottom-row { display:flex; align-items:flex-end; justify-content:space-between; position:relative; z-index:2; }
+    .stat-big { font-family:'Playfair Display',serif; font-size:2.1rem; font-weight:700; color:white; text-shadow:0 2px 8px rgba(0,0,0,0.15); }
+    .stat-label { font-size:0.7rem; color:rgba(255,255,255,0.9); font-weight:600; }
+    .tag { background: rgba(255,255,255,0.85); border-radius:100px; padding:5px 12px; font-size:0.68rem; font-weight:600; color:var(--forest); }
+
+    .info-section { padding: 22px 24px 26px; text-align: center; }
+    .info-text { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+    .info-text strong { color: var(--forest); }
+    .btn-cta {
+      display: inline-block; width: 100%; padding: 14px; background: var(--forest);
+      color: white; border-radius: 14px; text-decoration: none; font-weight: 600; font-size: 0.92rem;
+      transition: background 0.2s;
+    }
+    .btn-cta:hover { background: var(--forest-mid); }
+  </style>
+</head>
+<body>
+
+  <div class="view-card">
+    <div class="scene">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="18" fill="#D8F3DC"/>
+          <path d="M18 28C18 28 10 22 10 16C10 11.6 13.6 8 18 8C22.4 8 26 11.6 26 16C26 22 18 28 18 28Z" fill="#2D6A4F"/>
+          <path d="M18 8C18 8 14 13 18 18C22 13 18 8 18 8Z" fill="#74C69D"/>
+        </svg>
+        <span class="brand-name">Dharohar</span>
+      </div>
+      <div class="headline" id="headline">Someone's growing a forest 🌳</div>
+      <div class="sub" id="subline"></div>
+
+      <div class="trees-layer" id="treesLayer"></div>
+
+      <div class="bottom-row">
+        <div>
+          <div class="stat-big" id="treeNum">0</div>
+          <div class="stat-label">trees planted</div>
+        </div>
+        <div class="tag" id="co2Tag">0 kg CO₂ saved</div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-text" id="infoText">
+        This is a shared snapshot from <strong>Dharohar</strong> — an app that helps Indians track and reduce their daily carbon footprint.
+      </div>
+      <a href="index.html" class="btn-cta">🌱 Start your own forest</a>
+    </div>
+  </div>
+
+<script>
+  function sanitize(str) {
+    if (!str) return ''
+    return String(str).replace(/[<>"'`]/g, '').trim().slice(0, 80)
+  }
+
+  function treeSVG(type) {
+    if (type === 'grass') return `<svg width="22" height="30" viewBox="0 0 22 30"><path d="M11 30 Q8 18 9 6 Q11 2 11 6 Q13 2 13 8 Q14 18 11 30Z" fill="#A8D5BA"/></svg>`
+    if (type === 'sapling') return `<svg width="34" height="54" viewBox="0 0 34 54"><rect x="15" y="38" width="4" height="16" fill="#7a5230"/><ellipse cx="17" cy="28" rx="13" ry="16" fill="#74C69D"/></svg>`
+    if (type === 'bamboo') return `<svg width="30" height="74" viewBox="0 0 30 74"><rect x="13" y="10" width="5" height="64" rx="2" fill="#40916C"/></svg>`
+    return `<svg width="56" height="92" viewBox="0 0 56 92"><rect x="25" y="60" width="7" height="32" fill="#6b4423"/><ellipse cx="28" cy="36" rx="26" ry="30" fill="#2D6A4F"/></svg>`
+  }
+
+  // Read params from URL
+  const params  = new URLSearchParams(window.location.search)
+  const name    = sanitize(params.get('name')) || 'A Dharohar member'
+  const trees   = parseFloat(params.get('trees')) || 0
+  const co2     = parseFloat(params.get('co2')) || 0
+  const plants  = parseInt(params.get('plants')) || 0
+  const streak  = parseInt(params.get('streak')) || 0
+
+  document.getElementById('headline').textContent =
+    plants > 0 ? `${name} is growing a forest 🌳` : `${name} just started their carbon journey 🌱`
+  document.getElementById('subline').textContent = `${plants} plant${plants===1?'':'s'} grown · ${streak} day streak`
+  document.getElementById('treeNum').textContent = trees.toFixed(1)
+  document.getElementById('co2Tag').textContent  = `${co2.toFixed(1)} kg CO₂ saved`
+  document.getElementById('infoText').innerHTML =
+    `This is <strong>${name}'s</strong> real progress on Dharohar — an app that helps Indians track and reduce their daily carbon footprint.`
+
+  // Mini trees
+  const layer = document.getElementById('treesLayer')
+  const types = ['sapling','bamboo','tree','grass','sapling','tree']
+  const count = Math.min(plants, 6) || 1
+  for (let i = 0; i < count; i++) {
+    const div = document.createElement('div')
+    div.style.position = 'absolute'
+    div.style.bottom = '0'
+    div.style.left = `${10 + i * (80/Math.max(count-1,1))}%`
+    div.style.transform = 'scale(0.85)'
+    div.innerHTML = treeSVG(types[i % types.length])
+    layer.appendChild(div)
+  }
+
+  document.title = `${name}'s Dharohar Forest 🌳`
+</script>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-Frame-Options" content="DENY"/>
+  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+  <meta name="description" content="Dharohar AI Suggestions — Personalised tips to lower your carbon footprint, built from your own tracked data."/>
+  <title>Dharohar — AI Suggestions</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --forest:      #2D6A4F;
+      --forest-mid:  #40916C;
+      --leaf:        #74C69D;
+      --leaf-light:  #D8F3DC;
+      --sky:         #E8F4FD;
+      --earth:       #1B3A2D;
+      --cream:       #F7FBFF;
+      --text:        #1a2e22;
+      --muted:       #5a7a6a;
+      --border:      #e0ece6;
+      --white:       #ffffff;
+      --danger:      #c0392b;
+      --danger-bg:   #fff0f0;
+      --warn:        #e67e22;
+      --warn-bg:     #fff8f0;
+      --gold:        #f39c12;
+      --gold-bg:     #fffbf0;
+    }
+    html, body { min-height: 100%; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--text); }
+
+    /* ── NAV (consistent with other pages) ── */
+    nav {
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; }
+    .logo-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--forest); }
+    .logo-sub  { font-size: 0.6rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user  { font-size: 0.82rem; color: var(--muted); }
+    .nav-streak { background: var(--leaf-light); color: var(--forest); border-radius: 100px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; }
+    .nav-menu { position: relative; }
+    .nav-menu-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.75); backdrop-filter: blur(10px);
+      border: 1px solid rgba(45,106,79,0.18); border-radius: 100px;
+      padding: 7px 14px; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600; color: var(--forest); cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-menu-btn:hover { background: white; }
+    .nav-menu-btn .chevron { width: 14px; height: 14px; transition: transform 0.2s; }
+    .nav-menu-btn.open .chevron { transform: rotate(180deg); }
+    .dropdown {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+      border: 1px solid rgba(45,106,79,0.12); border-radius: 16px;
+      padding: 8px; min-width: 200px;
+      box-shadow: 0 12px 40px rgba(27,58,45,0.14); z-index: 200;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+      text-decoration: none; font-size: 0.85rem; font-weight: 500; color: var(--text); transition: background 0.15s;
+    }
+    .dropdown a:hover, .dropdown a.active { background: var(--leaf-light); color: var(--forest); }
+    .btn-signout {
+      width: 100%; margin-top: 6px; padding: 9px; background: transparent;
+      border: 1px solid #ffd0d0; border-radius: 10px; color: var(--danger);
+      font-size: 0.82rem; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-signout:hover { background: var(--danger-bg); }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    /* ── LOADING ── */
+    .loading-screen {
+      position: fixed; inset: 0; background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px; z-index: 500;
+    }
+    .loading-screen.hidden { display: none; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--forest); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── HERO ── */
+    .sugg-hero {
+      background: linear-gradient(135deg, var(--earth) 0%, var(--forest) 60%, var(--forest-mid) 100%);
+      border-radius: 24px; padding: 36px 36px 32px; margin-bottom: 24px;
+      color: white; position: relative; overflow: hidden;
+    }
+    .sugg-hero::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(116,198,157,0.12); pointer-events: none;
+    }
+    .hero-eyebrow { font-size: 0.72rem; letter-spacing: 3px; text-transform: uppercase; color: var(--leaf); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .hero-eyebrow .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--leaf); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; line-height: 1.3; margin-bottom: 18px; position: relative; z-index: 1; }
+    .hero-title .skeleton-line { display: inline-block; height: 1.2em; width: 70%; background: rgba(255,255,255,0.15); border-radius: 6px; vertical-align: middle; }
+
+    .hero-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; position: relative; z-index: 1; }
+    .btn-regenerate {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+      color: white; border-radius: 100px; padding: 10px 18px;
+      font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-regenerate:hover:not(:disabled) { background: rgba(255,255,255,0.22); }
+    .btn-regenerate:disabled { opacity: 0.55; cursor: default; }
+    .btn-regenerate .spin-icon { display: inline-block; transition: transform 0.4s; }
+    .btn-regenerate.loading .spin-icon { animation: spin 1s linear infinite; }
+    .hero-meta { font-size: 0.74rem; color: rgba(255,255,255,0.55); }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700;
+      color: var(--earth); margin: 28px 0 14px;
+    }
+    .section-label:first-of-type { margin-top: 0; }
+
+    /* ── SUGGESTION CARDS ── */
+    .sugg-grid { display: flex; flex-direction: column; gap: 14px; }
+    .sugg-card {
+      background: white; border: 1px solid var(--border); border-radius: 20px;
+      padding: 24px; display: flex; gap: 18px; align-items: flex-start;
+      transition: transform 0.18s, box-shadow 0.18s;
+      opacity: 0; transform: translateY(10px);
+      animation: cardIn 0.5s ease forwards;
+    }
+    .sugg-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(27,58,45,0.1); }
+    @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+
+    .sugg-icon {
+      width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+    .sugg-icon.travel { background: #E8F4FD; }
+    .sugg-icon.energy { background: var(--gold-bg); }
+    .sugg-icon.food   { background: var(--leaf-light); }
+    .sugg-icon.habit  { background: var(--sky); }
+
+    .sugg-body { flex: 1; min-width: 0; }
+    .sugg-top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+    .sugg-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--earth); line-height: 1.3; }
+    .sugg-tags { display: flex; gap: 6px; flex-shrink: 0; }
+    .sugg-tag {
+      font-size: 0.68rem; font-weight: 600; padding: 4px 10px; border-radius: 100px;
+      white-space: nowrap;
+    }
+    .tag-impact { background: var(--leaf-light); color: var(--forest); }
+    .tag-easy { background: var(--leaf-light); color: var(--forest); }
+    .tag-medium { background: var(--warn-bg); color: var(--warn); }
+    .tag-challenging { background: var(--danger-bg); color: var(--danger); }
+    .sugg-text { font-size: 0.87rem; color: var(--muted); line-height: 1.65; }
+    .sugg-cat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+
+    /* ── SKELETON LOADER ── */
+    .sk-card {
+      background: white; border: 1px solid var(--border); border-radius: 20px;
+      padding: 24px; display: flex; gap: 18px; align-items: flex-start;
+    }
+    .sk-icon { width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0; background: var(--border); animation: shimmer 1.5s ease-in-out infinite; }
+    .sk-lines { flex: 1; display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+    .sk-line { height: 12px; border-radius: 6px; background: var(--border); animation: shimmer 1.5s ease-in-out infinite; }
+    .sk-line.w60 { width: 60%; }
+    .sk-line.w90 { width: 90%; }
+    .sk-line.w40 { width: 40%; }
+    @keyframes shimmer { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+    /* ── DATA SNAPSHOT STRIP ── */
+    .snapshot-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px; margin-bottom: 28px;
+    }
+    .snap-box { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 16px 14px; text-align: center; }
+    .snap-num { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: var(--earth); }
+    .snap-label { font-size: 0.7rem; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+
+    /* ── EMPTY / ERROR STATES ── */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .e-icon { font-size: 2.8rem; margin-bottom: 14px; }
+    .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--earth); margin-bottom: 8px; }
+    .empty-state p { font-size: 0.88rem; line-height: 1.6; max-width: 380px; margin: 0 auto; }
+    .empty-state a { color: var(--forest); font-weight: 600; text-decoration: none; }
+    .empty-state .btn-primary {
+      display: inline-block; margin-top: 18px; background: var(--forest); color: white;
+      padding: 11px 24px; border-radius: 100px; text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+    }
+
+    .error-banner {
+      background: var(--danger-bg); border: 1px solid #f5b7b1; color: var(--danger);
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 18px;
+      font-size: 0.86rem; line-height: 1.6; display: flex; gap: 12px; align-items: flex-start;
+    }
+    .error-banner .e-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+    /* ── CTA AT BOTTOM ── */
+    .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 28px; }
+    @media (max-width: 540px) { .cta-grid { grid-template-columns: 1fr; } }
+    .cta-card {
+      border-radius: 18px; padding: 22px; text-decoration: none;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: transform 0.2s, box-shadow 0.2s; border: 1px solid transparent;
+    }
+    .cta-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(27,58,45,0.13); }
+    .cta-card.green { background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%); color: white; }
+    .cta-card.earth { background: linear-gradient(135deg, var(--earth) 0%, #2d5040 100%); color: white; }
+    .cta-icon { font-size: 1.8rem; }
+    .cta-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
+    .cta-desc { font-size: 0.78rem; opacity: 0.8; line-height: 1.5; }
+    .cta-arrow { font-size: 0.82rem; opacity: 0.7; margin-top: 4px; }
+
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--earth); color: white; border-radius: 100px; padding: 12px 24px; font-size: 0.88rem; font-weight: 500; transition: transform 0.3s; z-index: 999; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      nav { padding: 12px 16px; }
+      .sugg-hero { padding: 24px 20px; }
+      .hero-title { font-size: 1.3rem; }
+      .sugg-card { padding: 18px; flex-direction: column; }
+      .sugg-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div style="font-size:0.88rem; color:var(--muted);">Loading your suggestions...</div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="logo">
+    <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="18" fill="#D8F3DC"/>
+      <path d="M18 28C18 28 10 22 10 16C10 11.6 13.6 8 18 8C22.4 8 26 11.6 26 16C26 22 18 28 18 28Z" fill="#2D6A4F"/>
+      <path d="M18 8C18 8 14 13 18 18C22 13 18 8 18 8Z" fill="#74C69D"/>
+      <rect x="17" y="22" width="2" height="6" rx="1" fill="#40916C"/>
+    </svg>
+    <div>
+      <div class="logo-text">Dharohar</div>
+      <div class="logo-sub">Your Carbon Legacy</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-streak" id="navStreak">🔥 0 day streak</span>
+    <span class="nav-user" id="navUser"></span>
+    <div class="nav-menu">
+      <button class="nav-menu-btn" id="menuBtn" onclick="toggleMenu()">
+        Pages
+        <svg class="chevron" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="dropdown" id="dropdown">
+        <a href="index.html">🏠 Home</a>
+        <a href="DailyTracker.html">📍 Daily Tracker</a>
+        <a href="report.html">📊 My Report</a>
+        <a href="suggestions.html" class="active">💡 AI Suggestions</a>
+        <a href="forest.html">🌳 My Forest</a>
+        <button class="btn-signout" onclick="handleSignOut()">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="sugg-hero">
+    <div class="hero-eyebrow"><span class="pulse-dot"></span>AI Suggestions · built from your data</div>
+    <div class="hero-title" id="heroSummary"><span class="skeleton-line"></span></div>
+    <div class="hero-actions">
+      <button class="btn-regenerate" id="regenBtn" onclick="regenerate()">
+        <span class="spin-icon">↻</span>
+        <span id="regenLabel">Refresh my suggestions</span>
+      </button>
+      <span class="hero-meta" id="heroMeta"></span>
+    </div>
+  </div>
+
+  <div id="errorSlot"></div>
+
+  <!-- Snapshot strip -->
+  <div class="snapshot-strip" id="snapshotStrip"></div>
+
+  <div class="section-label" id="suggSectionLabel">Today's suggestions for you</div>
+  <div class="sugg-grid" id="suggGrid">
+    <!-- skeletons render here while loading -->
+  </div>
+
+  <div class="cta-grid">
+    <a href="DailyTracker.html" class="cta-card green">
+      <div class="cta-icon">📍</div>
+      <div class="cta-title">Log today's activity</div>
+      <div class="cta-desc">The more you log, the sharper these suggestions get</div>
+      <div class="cta-arrow">Go to tracker →</div>
+    </a>
+    <a href="forest.html" class="cta-card earth">
+      <div class="cta-icon">🌳</div>
+      <div class="cta-title">Visit my forest</div>
+      <div class="cta-desc">See the trees you've grown by acting on tips like these</div>
+      <div class="cta-arrow">See your forest →</div>
+    </a>
+  </div>
+
+</div><!-- /page -->
+
+<footer style="text-align:center; padding:20px; font-size:0.75rem; color:var(--muted);">🌿 Dharohar · Made with 🤍 in India 🇮🇳 · © 2026</footer>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const SUPABASE_URL  = 'https://yljfwnwrdsumaohbghnr.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsamZ3bndyZHN1bWFvaGJnaG5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjAwODIsImV4cCI6MjA5Njg5NjA4Mn0.5hUMp4A59waDhR_yDDf9KP7AIMsJ83bWtWbaXKsb9Hs'
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+})
+
+// Edge function endpoint — lives in the same Supabase project
+const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/generate-suggestions`
+
+function sanitize(str) {
+  if (!str || typeof str !== 'string') return ''
+  return str.replace(/[<>"'`]/g, '').replace(/javascript:/gi, '').trim().slice(0, 100)
+}
+
+// ── AUTH ────────────────────────────────────────────
+async function guardPage() {
+  const { data: { session }, error } = await supabase.auth.getSession()
+  if (error || !session?.user) { window.location.replace('index.html'); return null }
+  const expiresAt = session.expires_at * 1000
+  if (Date.now() >= expiresAt) { await supabase.auth.signOut(); window.location.replace('index.html'); return null }
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidPattern.test(session.user.id)) { await supabase.auth.signOut(); window.location.replace('index.html'); return null }
+  return { user: session.user, accessToken: session.access_token }
+}
+
+window.toggleMenu = () => {
+  document.getElementById('menuBtn').classList.toggle('open')
+  document.getElementById('dropdown').classList.toggle('open')
+}
+document.addEventListener('click', e => {
+  const m = document.querySelector('.nav-menu')
+  if (m && !m.contains(e.target)) {
+    document.getElementById('menuBtn').classList.remove('open')
+    document.getElementById('dropdown').classList.remove('open')
+  }
+})
+window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.replace('index.html') }
+
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = sanitize(msg)
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 3000)
+}
+
+const CATEGORY_META = {
+  travel: { icon: '🚗', label: 'Travel' },
+  energy: { icon: '⚡', label: 'Home energy' },
+  food:   { icon: '🍽️', label: 'Food' },
+  habit:  { icon: '🌱', label: 'Habit' },
+}
+
+function difficultyTag(d) {
+  const map = { easy: 'Easy win', medium: 'Worth it', challenging: 'Big change' }
+  const cls = { easy: 'tag-easy', medium: 'tag-medium', challenging: 'tag-challenging' }
+  return `<span class="sugg-tag ${cls[d] || 'tag-easy'}">${map[d] || 'Easy win'}</span>`
+}
+
+function renderSkeletons(count = 4) {
+  const grid = document.getElementById('suggGrid')
+  grid.innerHTML = Array.from({ length: count }).map(() => `
+    <div class="sk-card">
+      <div class="sk-icon"></div>
+      <div class="sk-lines">
+        <div class="sk-line w40"></div>
+        <div class="sk-line w90"></div>
+        <div class="sk-line w60"></div>
+      </div>
+    </div>
+  `).join('')
+}
+
+function renderSuggestions(suggestions) {
+  const grid = document.getElementById('suggGrid')
+  if (!suggestions || suggestions.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="e-icon">🌱</div>
+        <h3>No suggestions yet</h3>
+        <p>Log a few days of activity and your personalised suggestions will appear here.</p>
+        <a href="DailyTracker.html" class="btn-primary">Go to Daily Tracker</a>
+      </div>`
+    return
+  }
+  grid.innerHTML = suggestions.map((s, i) => {
+    const meta = CATEGORY_META[s.category] || CATEGORY_META.habit
+    return `
+      <div class="sugg-card" style="animation-delay:${i * 90}ms">
+        <div class="sugg-icon ${s.category || 'habit'}">${meta.icon}</div>
+        <div class="sugg-body">
+          <div class="sugg-cat-label">${meta.label}</div>
+          <div class="sugg-top-row">
+            <div class="sugg-title">${sanitize(s.title) || 'Suggestion'}</div>
+            <div class="sugg-tags">
+              ${s.impact ? `<span class="sugg-tag tag-impact">${sanitize(s.impact)}</span>` : ''}
+              ${difficultyTag(s.difficulty)}
+            </div>
+          </div>
+          <div class="sugg-text">${sanitize(s.body) || ''}</div>
+        </div>
+      </div>`
+  }).join('')
+}
+
+function renderSnapshot(ctxStats) {
+  const strip = document.getElementById('snapshotStrip')
+  if (!ctxStats) { strip.innerHTML = ''; return }
+  strip.innerHTML = `
+    <div class="snap-box">
+      <div class="snap-num">${ctxStats.streak}</div>
+      <div class="snap-label">🔥 day streak</div>
+    </div>
+    <div class="snap-box">
+      <div class="snap-num">${ctxStats.totalSaved.toFixed(1)}</div>
+      <div class="snap-label">kg CO₂ saved lifetime</div>
+    </div>
+    <div class="snap-box">
+      <div class="snap-num">${ctxStats.totalTrees.toFixed(1)}</div>
+      <div class="snap-label">🌳 trees grown</div>
+    </div>
+    <div class="snap-box">
+      <div class="snap-num">${ctxStats.daysLogged}</div>
+      <div class="snap-label">days logged (last 30)</div>
+    </div>
+  `
+}
+
+function renderError(message) {
+  document.getElementById('errorSlot').innerHTML = `
+    <div class="error-banner">
+      <div class="e-icon">⚠️</div>
+      <div>
+        <strong style="display:block;margin-bottom:2px;">Couldn't load suggestions</strong>
+        ${sanitize(message) || "Something went wrong talking to the AI. Try refreshing in a moment."}
+      </div>
+    </div>`
+}
+function clearError() { document.getElementById('errorSlot').innerHTML = '' }
+
+let session = null
+
+async function fetchSuggestions(force = false) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.accessToken}`,
+    },
+    body: JSON.stringify({ force }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`)
+  return data
+}
+
+function setHeroSummary(text) {
+  document.getElementById('heroSummary').textContent = text
+}
+
+function setRegenButtonLoading(loading) {
+  const btn = document.getElementById('regenBtn')
+  const label = document.getElementById('regenLabel')
+  btn.disabled = loading
+  btn.classList.toggle('loading', loading)
+  label.textContent = loading ? 'Thinking...' : 'Refresh my suggestions'
+}
+
+async function loadSuggestions(force = false) {
+  clearError()
+  renderSkeletons()
+  if (force) setHeroSummary('Re-reading your latest data...')
+
+  try {
+    const data = await fetchSuggestions(force)
+    setHeroSummary(data.summary || 'Here are a few ideas based on your recent activity.')
+    renderSuggestions(data.suggestions)
+
+    const metaEl = document.getElementById('heroMeta')
+    metaEl.textContent = data.cached
+      ? 'Generated earlier today · tap refresh for a fresh take'
+      : 'Freshly generated just now'
+
+    await loadSnapshot()
+  } catch (err) {
+    console.error('[Suggestions error]', err)
+    renderError(err.message)
+    setHeroSummary('We hit a snag generating your suggestions.')
+    document.getElementById('suggGrid').innerHTML = ''
+  }
+}
+
+async function loadSnapshot() {
+  const { data: profile } = await supabase.from('profiles').select('current_streak, total_co2_saved_kg, total_trees_planted').eq('id', session.user.id).single()
+
+  const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
+  const fromDate = thirtyDaysAgo.toISOString().split('T')[0]
+  const { data: logs } = await supabase.from('daily_logs').select('date').eq('user_id', session.user.id).gte('date', fromDate)
+
+  renderSnapshot({
+    streak: profile?.current_streak || 0,
+    totalSaved: profile?.total_co2_saved_kg || 0,
+    totalTrees: profile?.total_trees_planted || 0,
+    daysLogged: logs?.length || 0,
+  })
+}
+
+window.regenerate = () => {
+  setRegenButtonLoading(true)
+  loadSuggestions(true).finally(() => setRegenButtonLoading(false))
+}
+
+async function init() {
+  const auth = await guardPage()
+  if (!auth) return
+  session = auth
+  document.getElementById('loadingScreen').classList.add('hidden')
+
+  const userName = sanitize(auth.user.user_metadata?.full_name || auth.user.email?.split('@')[0] || 'Friend').split(' ')[0]
+  document.getElementById('navUser').textContent = userName
+
+  const { data: profile } = await supabase.from('profiles').select('current_streak').eq('id', auth.user.id).single()
+  document.getElementById('navStreak').textContent = `🔥 ${profile?.current_streak || 0} day streak`
+
+  await loadSuggestions(false)
+}
+
+init()
+</script>
+</body>
+</html>
