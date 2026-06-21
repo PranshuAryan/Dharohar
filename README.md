@@ -117,7 +117,47 @@ This project was built using a **Claude + Google Antigravity** workflow:
 
 ---
 
-## 🚀 Try It Live
+## 🧪 Testing
+
+Dharohar's core carbon-calculation logic (`dharohar-core.js`) is extracted into a pure, framework-free module and covered by a **Vitest** suite — **67 tests, 100% statement/branch/function/line coverage**.
+
+```bash
+npm install
+npm test            # run once
+npm run test:watch  # watch mode
+npm run test:coverage
+```
+
+**What's covered:**
+- `co2ForTravel()` / `totalTravelCo2()` — per-mode CO₂ math, unknown-mode fallback, negative/NaN/Infinity rejection, large-distance handling
+- `co2ForHomeEnergy()` / `getACTempFactor()` — AC temperature penalty scaling, all-appliance totals, missing/invalid usage objects, maxed-out 24-hour boundary
+- `phoneChargesEquivalent()`, `treesEquivalent()`, `daysOfOxygen()` — impact-equivalent formulas including the real CO₂→O₂ photosynthesis ratio
+- `plantTypeForSaving()` / `treeProgress()` — forest-growth logic at every threshold **boundary** (0.99 vs 1, 2.49 vs 2.5, 3.99 vs 4 kg, etc.) plus negative/invalid input
+- `vsAvgIndian()` — comparison-to-average-Indian math
+- `sanitize()` — XSS-relevant stripping of `<>`, quotes, `javascript:`, length capping, non-string input
+- `expandPlaceAbbreviations()` — Indian place-name abbreviation expansion used by the autocomplete
+
+```
+tests/
+├── travel.test.js
+├── home-energy.test.js
+├── impact-equivalents.test.js
+└── sanitize-and-places.test.js
+```
+
+---
+
+## ♿ Accessibility
+
+- Skip-to-content link on every page (visible on keyboard focus, jumps past the nav)
+- `<main>` landmark wrapping primary content; `<nav>` and `<footer>` as proper landmarks
+- All slider/range inputs carry descriptive `aria-label`s (AC hours, AC temperature, geyser hours, etc.)
+- Decorative SVGs (logo, chevrons) marked `aria-hidden="true"` so screen readers skip purely visual icons
+- The live running CO₂ total uses `aria-live="polite"` + `role="status"` so screen-reader users hear the updated total without being flooded during slider dragging
+- Text colour pairs verified against WCAG AA contrast (e.g. `--muted` on `--cream` = 4.56:1, passes the 4.5:1 minimum for normal text)
+- Toggle switches and icon-only buttons (slider +/−, hamburger menu) all carry `aria-label`s describing their action
+
+
 
 👉 **[mydharohar.netlify.app](https://mydharohar.netlify.app/)** — sign in with Google and start tracking immediately.
 
@@ -145,6 +185,14 @@ dharohar/
 ├── suggestions.html         # Groq-powered AI suggestions
 ├── forest.html               # Living Forest — animated growth + share
 ├── forest-view.html          # Public shareable forest card (no login)
+├── dharohar-core.js           # Pure, tested carbon-calculation logic shared across pages
+├── package.json               # Vitest test runner config
+├── vitest.config.js
+├── tests/
+│   ├── travel.test.js
+│   ├── home-energy.test.js
+│   ├── impact-equivalents.test.js
+│   └── sanitize-and-places.test.js
 └── README.md
 ```
 
